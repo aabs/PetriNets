@@ -101,7 +101,7 @@ namespace Tests
         [TestMethod]
         public void TestOutgoingWeight()
         {
-            var p = new OrdinaryPetriNet(
+            var p = new PetriNet(
                 "p",
                 new Dictionary<int, string> {
                     {0, "p0"},
@@ -125,9 +125,9 @@ namespace Tests
                 { 1, 5 }});        
         }
         
-        private static OrdinaryPetriNet CreatePNInhibited()
+        private static PetriNet CreatePNInhibited()
         {
-            var p = new OrdinaryPetriNet(
+            var p = new PetriNet(
                 "p",
                 new Dictionary<int, string> {
                     {0, "p0"},
@@ -146,9 +146,9 @@ namespace Tests
             return p;
         }
 
-        private static OrdinaryPetriNet CreatePNTwoInTwoOut()
+        private static PetriNet CreatePNTwoInTwoOut()
         {
-            var p = new OrdinaryPetriNet(
+            var p = new PetriNet(
                 "p",
                 new Dictionary<int, string> {
                     {0, "p0"},
@@ -168,9 +168,9 @@ namespace Tests
             return p;
         }
 
-        private static OrdinaryPetriNet CreatePNTwoInOneOut()
+        private static PetriNet CreatePNTwoInOneOut()
         {
-            var p = new OrdinaryPetriNet(
+            var p = new PetriNet(
                 "p",
                 new Dictionary<int, string> {
                     {0, "p0"},
@@ -188,7 +188,7 @@ namespace Tests
               );
             return p;
         }
-        public void AssertMarkings(OrdinaryPetriNet p, Dictionary<int, int> markingsExpected)
+        public void AssertMarkings(PetriNet p, Dictionary<int, int> markingsExpected)
         {
             foreach (var marking in markingsExpected)
             {

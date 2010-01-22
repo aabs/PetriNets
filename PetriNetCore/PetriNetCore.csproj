@@ -70,9 +70,14 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="AdjacencyList.cs" />
+    <Compile Include="Arc.cs" />
+    <Compile Include="InArc.cs" />
     <Compile Include="MarkovModel.cs" />
     <Compile Include="MatrixPetriNet.cs" />
-    <Compile Include="Model.cs" />
+    <Compile Include="CollectionExtensions.cs" />
+    <Compile Include="OutArc.cs" />
+    <Compile Include="PetriNet.cs" />
     <Compile Include="PnmlModelLoader.cs">
       <SubType>Code</SubType>
     </Compile>
