@@ -199,7 +199,7 @@ namespace Tests
 
     public class BasePNTester
     {
-        public void AssertMarkings(MatrixPetriNet p, Dictionary<int, int> markingsExpected)
+        public void AssertMarkings(PetriNet p, Dictionary<int, int> markingsExpected)
         {
             foreach (var marking in markingsExpected)
             {

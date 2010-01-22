@@ -36,9 +36,9 @@ namespace TestProject1
 
         }
 
-        public static MatrixPetriNet CreatePNTwoInOneOut()
+        public static PetriNet CreatePNTwoInOneOut()
         {
-            var p = new MatrixPetriNet(
+            var p = new PetriNet(
                 "p",
                 new Dictionary<int, string> {
                     {0, "p0"},
@@ -57,7 +57,7 @@ namespace TestProject1
             return p;
         }
 
-        public void AssertMarkings<T1, T2>(MatrixPetriNet p, Dictionary<T1, T2> markingsExpected)
+        public void AssertMarkings<T1, T2>(PetriNet p, Dictionary<T1, T2> markingsExpected)
         {
             foreach (var marking in markingsExpected)
             {
@@ -69,12 +69,12 @@ namespace TestProject1
     }
 
     [TestClass]
-    public class UnitTest1
+    public class GeneralPetriExerciseTests
     {
         [TestMethod]
         public void Test1()
         {
-            var p = new MatrixPetriNet("p",
+            var p = new PetriNet("p",
                 new Dictionary<int, string> {
                     {0, "p0"},
                     {1, "p1"},
@@ -94,7 +94,7 @@ namespace TestProject1
         [TestMethod]
         public void Test2()
         {
-            var p = new MatrixPetriNet("p",
+            var p = new PetriNet("p",
                 new Dictionary<int, string> {
                     {0, "p0"},
                     {1, "p1"}
@@ -125,7 +125,7 @@ namespace TestProject1
         [TestMethod]
         public void Test4()
         {
-            var p = new MatrixPetriNet("p",
+            var p = new PetriNet("p",
                 new Dictionary<int, string> {
                     {0, "p0"},
                     {1, "p1"}
@@ -150,7 +150,7 @@ namespace TestProject1
         [TestMethod]
         public void Test5()
         {
-            var p = new MatrixPetriNet("p",
+            var p = new PetriNet("p",
                 new Dictionary<int, string> {
                     {0, "p0"},
                     {1, "p1"},
@@ -158,10 +158,10 @@ namespace TestProject1
                 },
                 new Dictionary<int, int> { { 0, 1 }, { 1, 0 }, { 2, 0 } },
                 new Dictionary<int, string> { { 0, "t0" } },
-                new Dictionary<int, List<InArc>>(){
+                new Dictionary<int, List<InArc>>{
                     {0, new List<InArc>(){new InArc(0),new InArc(2)}}
                 },
-                new Dictionary<int, List<OutArc>>(){
+                new Dictionary<int, List<OutArc>>{
                     {0, new List<OutArc>(){new OutArc(1)}}
                 });
 
@@ -177,7 +177,7 @@ namespace TestProject1
         [TestMethod]
         public void Test6()
         {
-            var p = new MatrixPetriNet("p",
+            var p = new PetriNet("p",
                 new Dictionary<int, string> {
                     {(int)Places.p1, "p1"},
                     {(int)Places.p2, "p2"},
@@ -271,7 +271,7 @@ namespace TestProject1
         [TestMethod]
         public void Test7() // a bifurcating transition
         {
-            var p = new MatrixPetriNet("p",
+            var p = new PetriNet("p",
                 new Dictionary<int, string> {
                     {(int)Places.p1, "p1"},
                     {(int)Places.p2, "p2"},
@@ -316,7 +316,7 @@ namespace TestProject1
         [TestMethod]
         public void TestSelfTransition()
         {
-            var p = new MatrixPetriNet("p",
+            var p = new PetriNet("p",
                 new Dictionary<int, string> {
                     {(int)Places.p1, "p1"}
                 },
@@ -343,7 +343,7 @@ namespace TestProject1
         [TestMethod]
         public void TestDoubleSelfTransition()
         {
-            var p = new MatrixPetriNet("p",
+            var p = new PetriNet("p",
                 new Dictionary<int, string> {
                     {(int)Places.p1, "p1"}
                 },
@@ -369,7 +369,7 @@ namespace TestProject1
             Assert.AreEqual(1, p.GetMarking((int)Places.p1));
         }
   
-        public void AssertMarkings<T1, T2>(MatrixPetriNet p, Dictionary<T1, T2> markingsExpected)
+        public void AssertMarkings<T1, T2>(PetriNet p, Dictionary<T1, T2> markingsExpected)
         {
             foreach (var marking in markingsExpected)
             {
@@ -399,7 +399,7 @@ namespace TestProject1
         [TestMethod]
         public void TestTransitionFunctionExecution()
         {
-            var p = new MatrixPetriNet("p",
+            var p = new PetriNet("p",
                 new Dictionary<int, string> {
                     {0, "p0"},
                     {1, "p1"}

@@ -265,7 +265,7 @@ namespace PetriNetCore
         bool AllInArcPlacesHaveMoreTokensThanTheArcWeight(int transitionId)
         {
             var arcs = NonInhibitorsIntoTransition(transitionId);
-            var result = arcs.All(ia => Markings[ia.Source] <= ia.Weight);
+            var result = arcs.All(ia => Markings[ia.Source] >= ia.Weight);
             return result;
         }
 
