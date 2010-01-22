@@ -1,0 +1,7 @@
+PROBLEM:
+- Need to keep the name of a relationship as an internal detail of the petri net
+- Need to be able to refer to a transition in terms of the start state and the transition token
+
+KNOWN:
+- can't index the indicence list using the transition symbol, since the 
+=============
