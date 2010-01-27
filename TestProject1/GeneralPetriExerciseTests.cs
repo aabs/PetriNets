@@ -99,7 +99,7 @@ namespace TestProject1
                     {0, "p0"},
                     {1, "p1"}
                 },
-                new Dictionary<int, int> { { 0, 0 }, { 1, 0 }},
+                new Dictionary<int, int> { { 0, 0 }, { 1, 0 } },
                 new Dictionary<int, string> { { 0, "t0" } },
                 new Dictionary<int, List<InArc>>(){
                     {0, new List<InArc>(){new InArc(0)}}
@@ -111,7 +111,7 @@ namespace TestProject1
             p.SetMarking(0, 1);
             Assert.AreEqual(true, p.IsEnabled(0));
         }
-        
+
         [TestMethod]
         public void Test3()
         {
@@ -121,7 +121,7 @@ namespace TestProject1
             p.SetMarking(0, 0);
             Assert.AreEqual(false, p.IsEnabled(0));
         }
-        
+
         [TestMethod]
         public void Test4()
         {
@@ -130,7 +130,7 @@ namespace TestProject1
                     {0, "p0"},
                     {1, "p1"}
                 },
-                new Dictionary<int, int> { { 0, 1 }, {1,0} },
+                new Dictionary<int, int> { { 0, 1 }, { 1, 0 } },
                 new Dictionary<int, string> { { 0, "t0" } },
                 new Dictionary<int, List<InArc>>(){
                     {0, new List<InArc>(){new InArc(0)}}
@@ -368,7 +368,7 @@ namespace TestProject1
             p.Fire();
             Assert.AreEqual(1, p.GetMarking((int)Places.p1));
         }
-  
+
         public void AssertMarkings<T1, T2>(PetriNet p, Dictionary<T1, T2> markingsExpected)
         {
             foreach (var marking in markingsExpected)
@@ -422,9 +422,9 @@ namespace TestProject1
             Assert.AreEqual(2, p.GetMarking(0));
             var someLocal = 0;
             p.SetMarking(0, 1);
-            p.RegisterFunction(0, (t)=>someLocal+=1);
+            p.RegisterFunction(0, (t) => someLocal += 1);
             p.Fire();
-            Assert.AreEqual(1,someLocal); 
+            Assert.AreEqual(1, someLocal);
         }
 
 
@@ -460,7 +460,7 @@ namespace TestProject1
         }
 
         [TestMethod]
-        public void TestPureInputTransition()
+        public void TestInputTransition()
         {
             var p = new PetriNet("p",
                 new Dictionary<int, string> {
@@ -474,7 +474,7 @@ namespace TestProject1
                     { 
                         { 0, "Ti" }
                     },
-                new Dictionary<int, List<InArc>>(){},
+                new Dictionary<int, List<InArc>>() { },
                 new Dictionary<int, List<OutArc>>(){
                     {0, new List<OutArc>(){new OutArc(0)}}
                 });
@@ -486,6 +486,34 @@ namespace TestProject1
             p.Fire();
             Assert.AreEqual(2, p.GetMarking(0));
             Assert.IsTrue(p.IsEnabled(0));
+        }
+
+        [TestMethod]
+        public void TestDrainTransition()
+        {
+            var p = new PetriNet("p",
+                new Dictionary<int, string> {
+                    {0, "p0"}
+                },
+                new Dictionary<int, int> 
+                    { 
+                        { 0, 5 } 
+                    },
+                new Dictionary<int, string> 
+                    { 
+                        { 0, "Ti" }
+                    },
+                new Dictionary<int, List<InArc>>() { 
+                    {0, new List<InArc>(){new InArc(0)}}
+                },
+                new Dictionary<int, List<OutArc>>() { });
+
+            for (int i = 5; i >= 0; i--)
+            {
+                Assert.AreEqual(i, p.GetMarking(0));
+                Assert.AreEqual(i > 0, p.IsEnabled(0));
+                p.Fire();
+            }
         }
     }
 }
