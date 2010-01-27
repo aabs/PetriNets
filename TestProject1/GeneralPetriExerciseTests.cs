@@ -458,5 +458,34 @@ namespace TestProject1
             p.SetMarking(2, 1);
             Assert.AreEqual(true, p.IsEnabled(0));
         }
+
+        [TestMethod]
+        public void TestPureInputTransition()
+        {
+            var p = new PetriNet("p",
+                new Dictionary<int, string> {
+                    {0, "p0"}
+                },
+                new Dictionary<int, int> 
+                    { 
+                        { 0, 0 } 
+                    },
+                new Dictionary<int, string> 
+                    { 
+                        { 0, "Ti" }
+                    },
+                new Dictionary<int, List<InArc>>(){},
+                new Dictionary<int, List<OutArc>>(){
+                    {0, new List<OutArc>(){new OutArc(0)}}
+                });
+            Assert.AreEqual(0, p.GetMarking(0));
+            Assert.IsTrue(p.IsEnabled(0));
+            p.Fire();
+            Assert.AreEqual(1, p.GetMarking(0));
+            Assert.IsTrue(p.IsEnabled(0));
+            p.Fire();
+            Assert.AreEqual(2, p.GetMarking(0));
+            Assert.IsTrue(p.IsEnabled(0));
+        }
     }
 }

@@ -190,9 +190,32 @@ namespace PetriNetCore
             return new InArc[] {};
         }
 
+        internal IEnumerable<InArc> GetInArcs(int transitionId)
+        {
+            if (!InArcs.ContainsKey(transitionId))
+                return new InArc[] { };
+            return InArcs[transitionId];
+        }
+
+        internal IEnumerable<OutArc> GetOutArcs(int transitionId)
+        {
+            if (!OutArcs.ContainsKey(transitionId))
+                return new OutArc[] { };
+            return OutArcs[transitionId];
+        }
+
+        internal IEnumerable<Action<int>> GetTransitionFunctions(int transitionId)
+        {
+            if (!TransitionFunctions.ContainsKey(transitionId))
+                return new Action<int>[] { };
+            return TransitionFunctions[transitionId];
+        }
+
         internal IEnumerable<InArc> NonInhibitorsIntoTransition(int transitionId)
         {
-            return InArcs[transitionId].Except(InhibitorsIntoTransition(transitionId));
+            if (!InArcs.ContainsKey(transitionId))
+                return new InArc[] { };
+            return GetInArcs(transitionId).Except(InhibitorsIntoTransition(transitionId));
         }
 
         internal IEnumerable<int> EnabledTransitions()
@@ -305,10 +328,10 @@ namespace PetriNetCore
             var r = new Random();
             var tran = enabledTransitions.ElementAt(r.Next(count));
 
-            foreach (var place in InArcs[tran].Where(x => x.IsInhibitor == false))
+            foreach (var place in GetInArcs(tran).Where(x => x.IsInhibitor == false))
                 Markings[place.Source] = Markings.SafeGet(place.Source) - 1;
 
-            foreach (var arc in OutArcs[tran])
+            foreach (var arc in GetOutArcs(tran))
                 Markings[arc.Target] = Markings.SafeGet(arc.Target) + arc.Weight;
 
             if (TransitionFunctions.ContainsKey(tran))
