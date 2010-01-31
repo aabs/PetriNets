@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Diagnostics.Contracts;
+using dnAnalytics.LinearAlgebra;
 
 namespace PetriNetCore
 {
@@ -17,6 +19,16 @@ namespace PetriNetCore
             IEnumerable<Tuple<int, string>> transitions,
             IEnumerable<ArcDto> arcs)
         {
+            Contract.Requires(!string.IsNullOrEmpty(id));
+            Contract.Requires(places != null);
+            Contract.Requires(places.Count() > 0);
+            Contract.Requires(places.All(p => p != null));
+            Contract.Requires(transitions != null);
+            Contract.Requires(transitions.Count() > 0);
+            Contract.Requires(transitions.All(t => t != null));
+            Contract.Requires(arcs != null);
+            Contract.Requires(arcs.Count() > 0);
+            Contract.Requires(arcs.All(t => t != null));
             Id = id;
             ImportPlaces(places);
             ImportTransitions(transitions);
@@ -41,9 +53,9 @@ namespace PetriNetCore
             Contract.Requires(transitionNames.Count > 0);
             Contract.Requires(transitionNames.All(tn => !string.IsNullOrEmpty(tn.Value)));
             Contract.Requires(inArcs != null);
-            Contract.Requires(inArcs.Count>0);
-            Contract.Requires(outArcs!=null);
-            Contract.Requires(outArcs.Count>0);
+            Contract.Requires(inArcs.Count > 0);
+            Contract.Requires(outArcs != null);
+            Contract.Requires(outArcs.Count > 0);
 
             Contract.Ensures(Places.Count == placeNames.Count);
             Contract.Ensures(Places == placeNames);
@@ -56,6 +68,24 @@ namespace PetriNetCore
             InArcs = inArcs;
             OutArcs = outArcs;
         }
+
+        public PetriNet(string id,
+                Dictionary<int, string> placeNames,
+                Dictionary<int, int> markings,
+                Dictionary<int, string> transitionNames,
+                Dictionary<int, List<InArc>> inArcs,
+                Dictionary<int, List<OutArc>> outArcs,
+                IEnumerable<Tuple<int, int>> transitionOrdering)
+            : this(id, placeNames, markings, transitionNames, inArcs, outArcs)
+        {
+            PartialOrder = new SparseMatrix(transitionNames.Count());
+            transitionOrdering.Foreach(ordering =>
+            {
+                PartialOrder[ordering.Item1, ordering.Item2] = 1;
+                PartialOrder[ordering.Item2, ordering.Item1] = -1;
+            });
+        }
+
 
         #endregion
 
@@ -103,7 +133,7 @@ namespace PetriNetCore
         public Dictionary<int, List<InArc>> InArcs = new Dictionary<int, List<InArc>>();
         public Dictionary<int, List<OutArc>> OutArcs = new Dictionary<int, List<OutArc>>();
         public Dictionary<int, List<OutArc>> PlaceOutArcs = new Dictionary<int, List<OutArc>>();
-
+        public SparseMatrix PartialOrder;
         public Dictionary<int, List<Action<int>>> TransitionFunctions = new Dictionary<int, List<Action<int>>>();
         #endregion
 
@@ -187,7 +217,7 @@ namespace PetriNetCore
                        where a.IsInhibitor
                        select a;
             }
-            return new InArc[] {};
+            return new InArc[] { };
         }
 
         internal IEnumerable<InArc> GetInArcs(int transitionId)
@@ -218,7 +248,7 @@ namespace PetriNetCore
             return GetInArcs(transitionId).Except(InhibitorsIntoTransition(transitionId));
         }
 
-        internal IEnumerable<int> EnabledTransitions()
+        internal IEnumerable<int> AllEnabledTransitions()
         {
             return (from t in Transitions
                     where IsEnabled(t.Key)
@@ -266,6 +296,38 @@ namespace PetriNetCore
             return result;
         }
 
+        public int MaxPriority(int p, int p_2)
+        {
+            if (PartialOrder[p, p_2] != 0)
+            {
+                return PartialOrder[p, p_2] > 0 ? p : p_2;
+            }
+            return p;
+        }
+
+        public bool IsConflicted()
+        {
+            return GetConflictingTransitions().Count() > 0;
+        }
+
+        public IEnumerable<ConflictSet> GetConflictingTransitions()
+        {
+            var enabled = AllEnabledTransitions();
+            var q = from t1 in enabled
+                    from t2 in enabled
+                    from p in PlacesFeedingIntoTransitions()
+                    let contestedPlaces = SharedInputPlaces(t1, t2)
+                    where t1 != t2 && contestedPlaces.Count() > 0 && contestedPlaces.Contains(p)
+                    select p;
+            throw new NotImplementedException();
+        }
+
+        private IEnumerable<int> SharedInputPlaces(int t1, int t2)
+        {
+            return GetInArcs(t1)
+                    .Select(ia => ia.Source)
+                    .Intersect(GetInArcs(t2).Select(ia => ia.Source));
+        }
         #endregion
 
         #region extensibility
@@ -319,7 +381,7 @@ namespace PetriNetCore
         public virtual void Fire()
         {
             // pick a transition to fire at random
-            var enabledTransitions = EnabledTransitions();
+            var enabledTransitions = AllEnabledTransitions();
             var count = enabledTransitions.Count();
 
             if (count == 0)
@@ -353,5 +415,12 @@ namespace PetriNetCore
             Contract.Invariant(TransitionFunctions != null, "no null TransitionFunctions");
         }
 #endif
+
+    }
+
+    public class ConflictSet
+    {
+        public IEnumerable<int> ConflictedTransitions { get; set; }
+        public IEnumerable<int> ContestedPlaces { get; set; }
     }
 }

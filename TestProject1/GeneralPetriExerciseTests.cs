@@ -515,5 +515,64 @@ namespace TestProject1
                 p.Fire();
             }
         }
+
+        [TestMethod]
+        public void TestPrioritySetup()
+        {
+            var p = new PetriNet("p",
+               new Dictionary<int, string> {
+                    {0, "p0"},
+                    {1, "p1"},
+                    {2, "p2"}
+                },
+               new Dictionary<int, int> 
+                    { 
+                        { 0, 1 } ,
+                        { 1, 1 } ,
+                        { 2, 1 } 
+                    },
+               new Dictionary<int, string> 
+                    { 
+                        { 0, "t1" },
+                        { 1, "t2" }
+                    },
+               new Dictionary<int, List<InArc>>(){
+                    {0, new List<InArc>(){new InArc(0),new InArc(1)}},
+                    {1, new List<InArc>(){new InArc(1),new InArc(2)}}
+                },
+               new Dictionary<int, List<OutArc>>() { },
+               new[] { Tuple.Create(0, 1) });
+            Assert.AreEqual(0, p.MaxPriority(0, 1));
+        }
+
+        [TestMethod]
+        public void TestConflictDetection()
+        {
+            var p = new PetriNet("p",
+               new Dictionary<int, string> {
+                    {0, "p0"},
+                    {1, "p1"},
+                    {2, "p2"}
+                },
+               new Dictionary<int, int> 
+                    { 
+                        { 0, 1 } ,
+                        { 1, 1 } ,
+                        { 2, 1 } 
+                    },
+               new Dictionary<int, string> 
+                    { 
+                        { 0, "t1" },
+                        { 1, "t2" }
+                    },
+               new Dictionary<int, List<InArc>>(){
+                    {0, new List<InArc>(){new InArc(0),new InArc(1)}},
+                    {1, new List<InArc>(){new InArc(1),new InArc(2)}}
+                },
+               new Dictionary<int, List<OutArc>>() { },
+               new[] { Tuple.Create(0, 1) });
+            Assert.IsTrue(p.IsConflicted());
+            var conflictedTransitions = p.GetConflictingTransitions();
+        }
     }
 }
