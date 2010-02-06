@@ -18,7 +18,7 @@ namespace PetriNetCore
     {
         static int seed = 0;
         public static int GetId() { return ++seed; }
-        public static IEnumerable<PetriNet> Load(string path)
+        public static IEnumerable<GraphPetriNet> Load(string path)
         {
             XNamespace ns = "http://www.example.org/pnml";
             var doc = XDocument.Load(path);
@@ -55,7 +55,7 @@ namespace PetriNetCore
                                    FromPlace = FromPlace
                                }
                     where n.Attribute("type").Value == "http://www.example.org/pnml/PTNet"
-                    select new PetriNet(
+                    select new GraphPetriNet(
                         netid,
                         places.Select(p => Tuple.Create<int, string,int>(p.Guid, p.Id, p.Marking)).ToList(),
                         transitions.Select(t => Tuple.Create<int, string>(t.Guid, t.Id)).ToList(),

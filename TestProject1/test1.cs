@@ -101,7 +101,7 @@ namespace Tests
         [TestMethod]
         public void TestOutgoingWeight()
         {
-            var p = new PetriNet(
+            var p = new GraphPetriNet(
                 "p",
                 new Dictionary<int, string> {
                     {0, "p0"},
@@ -125,9 +125,9 @@ namespace Tests
                 { 1, 5 }});        
         }
         
-        private static PetriNet CreatePNInhibited()
+        private static GraphPetriNet CreatePNInhibited()
         {
-            var p = new PetriNet(
+            var p = new GraphPetriNet(
                 "p",
                 new Dictionary<int, string> {
                     {0, "p0"},
@@ -146,9 +146,9 @@ namespace Tests
             return p;
         }
 
-        private static PetriNet CreatePNTwoInTwoOut()
+        private static GraphPetriNet CreatePNTwoInTwoOut()
         {
-            var p = new PetriNet(
+            var p = new GraphPetriNet(
                 "p",
                 new Dictionary<int, string> {
                     {0, "p0"},
@@ -168,9 +168,9 @@ namespace Tests
             return p;
         }
 
-        private static PetriNet CreatePNTwoInOneOut()
+        private static GraphPetriNet CreatePNTwoInOneOut()
         {
-            var p = new PetriNet(
+            var p = new GraphPetriNet(
                 "p",
                 new Dictionary<int, string> {
                     {0, "p0"},
@@ -188,7 +188,7 @@ namespace Tests
               );
             return p;
         }
-        public void AssertMarkings(PetriNet p, Dictionary<int, int> markingsExpected)
+        public void AssertMarkings(GraphPetriNet p, Dictionary<int, int> markingsExpected)
         {
             foreach (var marking in markingsExpected)
             {
@@ -199,7 +199,7 @@ namespace Tests
 
     public class BasePNTester
     {
-        public void AssertMarkings(PetriNet p, Dictionary<int, int> markingsExpected)
+        public void AssertMarkings(GraphPetriNet p, Dictionary<int, int> markingsExpected)
         {
             foreach (var marking in markingsExpected)
             {

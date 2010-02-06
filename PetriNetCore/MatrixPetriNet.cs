@@ -20,8 +20,37 @@ namespace PetriNetCore
     public class MatrixPetriNet
     {
         #region ctors
-        public MatrixPetriNet()
+        /// <summary>
+        /// Create a new Petri Net using Sparse Matrices for arc representation
+        /// </summary>
+        /// <param name="id">The name of the Petri net</param>
+        /// <param name="placeNames">A complete list of the names of the places</param>
+        /// <param name="markings">A mapping between the places and integers. The initial marking of the nett</param>
+        /// <param name="transitionNames">A zero based contiguous sequence of names for each of the transitions in the net</param>
+        /// <param name="inArcs">Arcs coming into transitions</param>
+        /// <param name="outArcs">Arcs from transitions into places</param>
+        /// <remarks>
+        /// <see cref="placeNames"/> and <see cref="transitionNames"/> must contain a contiguous sequence of
+        /// identifier for all of the places and transitions. These values are used to calculate
+        /// what the dimensions of the matrices are, so the keys of the dictionaries must be zero based and
+        /// contiguous.
+        /// </remarks>
+        [ContractVerification(false)]
+        public MatrixPetriNet(string id,
+            Dictionary<int, string> placeNames,
+            Dictionary<int, int> markings,
+            Dictionary<int, string> transitionNames,
+            Dictionary<int, List<InArc>> inArcs,
+            Dictionary<int, List<OutArc>> outArcs,
+            IEnumerable<Tuple<int, int>> transitionOrdering
+            ) : this(id, placeNames, markings, transitionNames, inArcs, outArcs)
         {
+            PartialOrder = new SparseMatrix(transitionNames.Count());
+            transitionOrdering.Foreach(ordering =>
+            {
+                PartialOrder[ordering.Item1, ordering.Item2] = 1;
+                PartialOrder[ordering.Item2, ordering.Item1] = -1;
+            });
         }
 
         /// <summary>
@@ -48,7 +77,7 @@ namespace PetriNetCore
             Dictionary<int, List<OutArc>> outArcs
             )
         {
-            Contract.Requires(!string.IsNullOrEmpty(id),  "must provide valid PN ID");
+            Contract.Requires(!string.IsNullOrEmpty(id), "must provide valid PN ID");
             Contract.Requires(placeNames != null, "must provide a set of place names");
             Contract.Requires(placeNames.Count > 0, "places must be non-empty");
             Contract.Requires(markings != null, "must provide an initial marking");
@@ -64,16 +93,17 @@ namespace PetriNetCore
             Contract.Requires(transitionNames.All(x => (x.Key >= 0) && (x.Key <= transitionNames.Count)), "all transitions must be identifiable");
             Contract.Requires(inArcs.All(x => (x.Key >= 0) && (x.Key <= transitionNames.Count)), "all in arcs must refer to known transitions");
             Contract.Requires(outArcs.All(x => (x.Key >= 0) && (x.Key <= transitionNames.Count)), "all out arcs must refer to known transitions");
-            */Contract.Ensures(Transitions.Count == transitionNames.Count);
+            */
+            Contract.Ensures(Transitions.Count == transitionNames.Count);
             Contract.Ensures(Places.Count == placeNames.Count);
-            
+
             Id = id;
             InMatrix = new SparseMatrix(placeNames.Count, transitionNames.Count);
             OutMatrix = new SparseMatrix(placeNames.Count, transitionNames.Count);
             Places = placeNames;
             Transitions = transitionNames;
             Markings = new SparseVector(markings.Count);
-            markings.Foreach(x=>Markings[x.Key] = x.Value);
+            markings.Foreach(x => Markings[x.Key] = x.Value);
             inArcs.Foreach(x => x.Value.Foreach(y => InMatrix[y.Source, x.Key] = y.Weight));
             outArcs.Foreach(x => x.Value.Foreach(y => OutMatrix[y.Target, x.Key] = y.Weight));
         }
@@ -85,7 +115,8 @@ namespace PetriNetCore
     	public SparseMatrix InMatrix {get;set;}
     	public SparseMatrix OutMatrix {get;set;}
     	public SparseMatrix FlowMatrix {get;set;}
-    	public SparseVector Markings {get;set;}
+        public SparseMatrix PartialOrder { get; set; }
+        public SparseVector Markings { get; set; }
         public Dictionary<int, string> Places = new Dictionary<int, string>();
         public Dictionary<int, string> Transitions = new Dictionary<int, string>();
         public Dictionary<int, List<Action<int>>> TransitionFunctions = new Dictionary<int, List<Action<int>>>();
@@ -239,7 +270,8 @@ namespace PetriNetCore
         
         public virtual void Fire()
         {
-        	Markings = Markings + (OutMatrix - InMatrix)*GetEnabledTransitions();
+            var enabledTransitions = GetEnabledTransitions();
+            Markings = Markings + (OutMatrix - InMatrix) * enabledTransitions;
         }
         #endregion
         [ContractInvariantMethod]
@@ -255,6 +287,25 @@ namespace PetriNetCore
             Contract.Invariant(OutMatrix != null, "the out matrix must be a valid matrix");
             Contract.Invariant(OutMatrix.Columns == Transitions.Count, "out matrix is the wrong width");
             Contract.Invariant(OutMatrix.Rows == Places.Count, "out matrix is the wrong height");
+        }
+
+        public int MaxPriority(int p, int p_2)
+        {
+            if (PartialOrder[p, p_2] != 0)
+            {
+                return PartialOrder[p, p_2] > 0 ? p : p_2;
+            }
+            return p;
+        }
+
+        public bool IsConflicted()
+        {
+            return GetConflictingTransitions().Count() > 0;
+        }
+
+        public IEnumerable<ConflictSet> GetConflictingTransitions()
+        {
+            throw new NotImplementedException();
         }
     }
 

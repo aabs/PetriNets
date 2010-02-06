@@ -2,79 +2,19 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
-using PetriNetCore;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using PetriNetCore;
 
 namespace TestProject1
 {
-    enum Places
-    {
-        p1 = 0, p2 = 1, p3 = 2, p4 = 3
-    }
-    enum Transitions
-    {
-        t1 = 0, t2 = 1, t3 = 2
-    }
 
     [TestClass]
-    public class TestClass2
-    {
-
-        [TestMethod]
-        public void TestTest1()
-        {
-            var p = CreatePNTwoInOneOut();
-            AssertMarkings(p, new Dictionary<int, int>{ 
-                { 0, 1 }, 
-                { 1, 1 },
-                { 2, 0 } });
-            p.Fire();
-            AssertMarkings(p, new Dictionary<int, int>{ 
-                { 0, 0 }, 
-                { 1, 0 },
-                { 2, 1 } });
-
-        }
-
-        public static GraphPetriNet CreatePNTwoInOneOut()
-        {
-            var p = new GraphPetriNet(
-                "p",
-                new Dictionary<int, string> {
-                    {0, "p0"},
-                    {1, "p1"},
-                    {2, "p2"}
-                },
-                new Dictionary<int, int> { { 0, 1 }, { 1, 1 }, { 2, 0 } },
-                new Dictionary<int, string> { { 0, "t0" } },
-                new Dictionary<int, List<InArc>>(){
-                    {0, new List<InArc>(){new InArc(0),new InArc(1)}}
-                },
-                new Dictionary<int, List<OutArc>>(){
-                    {0, new List<OutArc>(){new OutArc(2)}}
-                }
-              );
-            return p;
-        }
-
-        public void AssertMarkings<T1, T2>(GraphPetriNet p, Dictionary<T1, T2> markingsExpected)
-        {
-            foreach (var marking in markingsExpected)
-            {
-                Assert.AreEqual(marking.Value, p.GetMarking(Convert.ToInt32(marking.Key)));
-            }
-        }
-
-
-    }
-
-    [TestClass]
-    public class TestGraphPetriNet
+    public class TestMatrixPetriNet
     {
         [TestMethod]
-        public void Test1()
+        public void TestCreate2to1MatrixNet()
         {
-            var p = new GraphPetriNet("p",
+            var p = new MatrixPetriNet("p",
                 new Dictionary<int, string> {
                     {0, "p0"},
                     {1, "p1"},
@@ -92,9 +32,9 @@ namespace TestProject1
         }
 
         [TestMethod]
-        public void Test2()
+        public void Test1to1Enablement()
         {
-            var p = new GraphPetriNet("p",
+            var p = new MatrixPetriNet("p",
                 new Dictionary<int, string> {
                     {0, "p0"},
                     {1, "p1"}
@@ -113,7 +53,7 @@ namespace TestProject1
         }
 
         [TestMethod]
-        public void Test3()
+        public void TestSetMarkingAffectsEnablementszx()
         {
             var p = TestClass2.CreatePNTwoInOneOut();
 
@@ -123,9 +63,9 @@ namespace TestProject1
         }
 
         [TestMethod]
-        public void Test4()
+        public void Test1to1Fire()
         {
-            var p = new GraphPetriNet("p",
+            var p = new MatrixPetriNet("p",
                 new Dictionary<int, string> {
                     {0, "p0"},
                     {1, "p1"}
@@ -148,9 +88,9 @@ namespace TestProject1
         }
 
         [TestMethod]
-        public void Test5()
+        public void Test2to1EnablementAndFiring()
         {
-            var p = new GraphPetriNet("p",
+            var p = new MatrixPetriNet("p",
                 new Dictionary<int, string> {
                     {0, "p0"},
                     {1, "p1"},
@@ -175,9 +115,9 @@ namespace TestProject1
         }
 
         [TestMethod]
-        public void Test6()
+        public void TestMarkingFlowInComplexNet()
         {
-            var p = new GraphPetriNet("p",
+            var p = new MatrixPetriNet("p",
                 new Dictionary<int, string> {
                     {(int)Places.p1, "p1"},
                     {(int)Places.p2, "p2"},
@@ -269,9 +209,9 @@ namespace TestProject1
         }
 
         [TestMethod]
-        public void Test7() // a bifurcating transition
+        public void TestMarkingFlowInBifurcatedTransition() // a bifurcating transition
         {
-            var p = new GraphPetriNet("p",
+            var p = new MatrixPetriNet("p",
                 new Dictionary<int, string> {
                     {(int)Places.p1, "p1"},
                     {(int)Places.p2, "p2"},
@@ -316,7 +256,7 @@ namespace TestProject1
         [TestMethod]
         public void TestSelfTransition()
         {
-            var p = new GraphPetriNet("p",
+            var p = new MatrixPetriNet("p",
                 new Dictionary<int, string> {
                     {(int)Places.p1, "p1"}
                 },
@@ -343,7 +283,7 @@ namespace TestProject1
         [TestMethod]
         public void TestDoubleSelfTransition()
         {
-            var p = new GraphPetriNet("p",
+            var p = new MatrixPetriNet("p",
                 new Dictionary<int, string> {
                     {(int)Places.p1, "p1"}
                 },
@@ -369,7 +309,7 @@ namespace TestProject1
             Assert.AreEqual(1, p.GetMarking((int)Places.p1));
         }
 
-        public void AssertMarkings<T1, T2>(GraphPetriNet p, Dictionary<T1, T2> markingsExpected)
+        public void AssertMarkings<T1, T2>(MatrixPetriNet p, Dictionary<T1, T2> markingsExpected)
         {
             foreach (var marking in markingsExpected)
             {
@@ -399,7 +339,7 @@ namespace TestProject1
         [TestMethod]
         public void TestTransitionFunctionExecution()
         {
-            var p = new GraphPetriNet("p",
+            var p = new MatrixPetriNet("p",
                 new Dictionary<int, string> {
                     {0, "p0"},
                     {1, "p1"}
@@ -462,7 +402,7 @@ namespace TestProject1
         [TestMethod]
         public void TestInputTransition()
         {
-            var p = new GraphPetriNet("p",
+            var p = new MatrixPetriNet("p",
                 new Dictionary<int, string> {
                     {0, "p0"}
                 },
@@ -491,7 +431,7 @@ namespace TestProject1
         [TestMethod]
         public void TestDrainTransition()
         {
-            var p = new GraphPetriNet("p",
+            var p = new MatrixPetriNet("p",
                 new Dictionary<int, string> {
                     {0, "p0"}
                 },
@@ -519,7 +459,7 @@ namespace TestProject1
         [TestMethod]
         public void TestPrioritySetup()
         {
-            var p = new GraphPetriNet("p",
+            var p = new MatrixPetriNet("p",
                new Dictionary<int, string> {
                     {0, "p0"},
                     {1, "p1"},
@@ -548,7 +488,7 @@ namespace TestProject1
         [TestMethod]
         public void TestConflictDetection()
         {
-            var p = new GraphPetriNet("p",
+            var p = new MatrixPetriNet("p",
                new Dictionary<int, string> {
                     {0, "p0"},
                     {1, "p1"},

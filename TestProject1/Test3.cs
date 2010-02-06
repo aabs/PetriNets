@@ -22,9 +22,9 @@ namespace Tests
             AssertMarkings(pn, new Dictionary<int, int> { { 0, 1 }, { 1, 0 }, { 2, 1 }, { 3, 0 }, { 4, 0 }, { 5, 1 }, { 6, 1 } });
         }
 
-        public PetriNet CreateTestNet()
+        public GraphPetriNet CreateTestNet()
         {
-            var pn = new PetriNet("p",
+            var pn = new GraphPetriNet("p",
                 new Dictionary<int, string> { { 0, "s1" }, { 1, "s2" }, { 2, "s3" }, { 3, "s4" }, { 4, "pi" }, { 5, "pi1" }, { 6, "pi2" } },
                 new Dictionary<int, int> { { 0, 1 }, { 1, 0 }, { 2, 1 }, { 3, 0 }, { 4, 0 }, { 5, 0 }, { 6, 0 } },
                 new Dictionary<int, string> { { 0, "t1" }, { 1, "t2" }, { 2, "ti" }, { 3, "te1" }, { 4, "te2" } },
