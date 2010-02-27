@@ -43,7 +43,6 @@ namespace PetriNetCore
                         Dictionary<int, List<OutArc>> outArcs
             )
         {
-#if USING_CONTRACTS
             Contract.Requires(!string.IsNullOrEmpty(id));
             Contract.Requires(placeNames != null);
             Contract.Requires(placeNames.Count > 0);
@@ -59,13 +58,28 @@ namespace PetriNetCore
 
             Contract.Ensures(Places.Count == placeNames.Count);
             Contract.Ensures(Places == placeNames);
-#endif
+
             Id = id;
             Places = placeNames;
             Markings = markings;
             Transitions = transitionNames;
             Markings = markings;
             InArcs = inArcs;
+
+            // each arc into a transition can be seen as an arc out of a place 
+            // (which may be convenient for conflict resolution)
+            foreach (var transitionInArcs in InArcs)
+            {
+                foreach (var inArc in transitionInArcs.Value)
+                {
+                    if (!PlaceOutArcs.ContainsKey(inArc.Source))
+                    {
+                        PlaceOutArcs[inArc.Source] = new List<OutArc>();
+                    }
+                    PlaceOutArcs[inArc.Source].Add(new OutArc(transitionInArcs.Key));
+                }
+            }
+
             OutArcs = outArcs;
         }
 
@@ -75,15 +89,12 @@ namespace PetriNetCore
                 Dictionary<int, string> transitionNames,
                 Dictionary<int, List<InArc>> inArcs,
                 Dictionary<int, List<OutArc>> outArcs,
-                IEnumerable<Tuple<int, int>> transitionOrdering)
+                Dictionary<int, int> transitionOrdering)
             : this(id, placeNames, markings, transitionNames, inArcs, outArcs)
         {
-            PartialOrder = new SparseMatrix(transitionNames.Count());
-            transitionOrdering.Foreach(ordering =>
-            {
-                PartialOrder[ordering.Item1, ordering.Item2] = 1;
-                PartialOrder[ordering.Item2, ordering.Item1] = -1;
-            });
+            var x = transitionNames.Select(t => t.Key).Except(transitionOrdering.Select(t => t.Key));
+            var y = transitionOrdering.Union(x.ToDictionary(t => t, t => 0)); // baseline priority level
+            TransitionPriorities = y.ToDictionary(a=>a.Key, a=>a.Value);
         }
 
 
@@ -133,7 +144,7 @@ namespace PetriNetCore
         public Dictionary<int, List<InArc>> InArcs = new Dictionary<int, List<InArc>>();
         public Dictionary<int, List<OutArc>> OutArcs = new Dictionary<int, List<OutArc>>();
         public Dictionary<int, List<OutArc>> PlaceOutArcs = new Dictionary<int, List<OutArc>>();
-        public SparseMatrix PartialOrder;
+        public Dictionary<int, int> TransitionPriorities = new Dictionary<int,int>();
         public Dictionary<int, List<Action<int>>> TransitionFunctions = new Dictionary<int, List<Action<int>>>();
         #endregion
 
@@ -248,7 +259,7 @@ namespace PetriNetCore
             return GetInArcs(transitionId).Except(InhibitorsIntoTransition(transitionId));
         }
 
-        internal IEnumerable<int> AllEnabledTransitions()
+        public IEnumerable<int> AllEnabledTransitions()
         {
             return (from t in Transitions
                     where IsEnabled(t.Key)
@@ -277,11 +288,12 @@ namespace PetriNetCore
 
         internal IEnumerable<int> AllPlaces()
         {
-            var result = AllSourcePlaces()
+            return Places.Keys;
+/*            var result = AllSourcePlaces()
                 .Select(x => x.Target)
                 .Concat(AllDestinationPlaces()
                             .Select(y => y.Source)).ToList();
-            return result;
+            return result;*/
         }
 
         internal IEnumerable<int> AllMarkedPlaces()
@@ -296,30 +308,36 @@ namespace PetriNetCore
             return result;
         }
 
-        public int MaxPriority(int p, int p_2)
-        {
-            if (PartialOrder[p, p_2] != 0)
-            {
-                return PartialOrder[p, p_2] > 0 ? p : p_2;
-            }
-            return p;
-        }
-
         public bool IsConflicted()
         {
-            return GetConflictingTransitions().Count() > 0;
+            return AllPlaces().Any(pid => PlaceIsConflicted(pid));
         }
 
-        public IEnumerable<ConflictSet> GetConflictingTransitions()
+        public IEnumerable<int> GetEnabledTransitionsAdjacentToPlace(int placeId)
         {
-            var enabled = AllEnabledTransitions();
-            var q = from t1 in enabled
-                    from t2 in enabled
-                    from p in PlacesFeedingIntoTransitions()
-                    let contestedPlaces = SharedInputPlaces(t1, t2)
-                    where t1 != t2 && contestedPlaces.Count() > 0 && contestedPlaces.Contains(p)
+
+            var q = (from outArc in GetPlaceOutArcs(placeId)
+                    where IsEnabled(outArc.Target)
+                    select outArc.Target).ToArray();
+            return q;
+        }
+
+        IEnumerable<OutArc> GetPlaceOutArcs(int placeId)
+        {
+            return PlaceOutArcs.ContainsKey(placeId) ? PlaceOutArcs[placeId].AsEnumerable() : new OutArc[] { };
+        }
+
+        public IEnumerable<int> GetConflictedPlaces()
+        {
+            var q = from p in AllPlaces()
+                    where PlaceIsConflicted(p)
                     select p;
-            throw new NotImplementedException();
+            return q;
+        }
+
+        public bool PlaceIsConflicted(int placeId)
+        {
+            return GetEnabledTransitionsAdjacentToPlace(placeId).Count() > 1;
         }
 
         private IEnumerable<int> SharedInputPlaces(int t1, int t2)
@@ -416,6 +434,19 @@ namespace PetriNetCore
         }
 #endif
 
+
+        public int? GetNextTransitionToFire()
+        {
+            var ets = AllEnabledTransitions();
+            return (from t in ets
+                    orderby GetTransitionPriority(t) descending
+                    select t).FirstOrDefault();
+        }
+
+        public int GetTransitionPriority(int t)
+        {
+            return TransitionPriorities.ContainsKey(t) ? TransitionPriorities[t] : 0;
+        }
     }
 
     public class ConflictSet

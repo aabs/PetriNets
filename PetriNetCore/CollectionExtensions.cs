@@ -1,9 +1,7 @@
 ﻿using System;
 using System.Diagnostics.Contracts;
 using System.Collections.Generic;
-#if USING_CONTRACTS
-using System.Diagnostics.Contracts;
-#endif
+
 namespace PetriNetCore
 {
     public static class CollectionExtensions

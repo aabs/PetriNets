@@ -14,7 +14,7 @@ using System.Diagnostics.Contracts;
 
 namespace PetriNetCore
 {
-	/// <summary>
+    /// <summary>
 	/// Description of MatrixPetriNet.
 	/// </summary>
     public class MatrixPetriNet

@@ -1,6 +1,6 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 11.00
-# Visual Studio 10
+# Visual Studio 2010
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PetriNetCore", "PetriNetCore\PetriNetCore.csproj", "{0D54BE5B-EF12-401C-9E6B-FEFC4557D13D}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TestProject1", "TestProject1\TestProject1.csproj", "{2885F23C-DDB0-43BE-BE46-7C11F21BB505}"
