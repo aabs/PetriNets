@@ -15,8 +15,8 @@ using System.Diagnostics.Contracts;
 namespace PetriNetCore
 {
     /// <summary>
-	/// Description of MatrixPetriNet.
-	/// </summary>
+    /// Description of MatrixPetriNet.
+    /// </summary>
     public class MatrixPetriNet
     {
         #region ctors
@@ -42,15 +42,12 @@ namespace PetriNetCore
             Dictionary<int, string> transitionNames,
             Dictionary<int, List<InArc>> inArcs,
             Dictionary<int, List<OutArc>> outArcs,
-            IEnumerable<Tuple<int, int>> transitionOrdering
-            ) : this(id, placeNames, markings, transitionNames, inArcs, outArcs)
+            Dictionary<int, int> transitionOrdering)
+            : this(id, placeNames, markings, transitionNames, inArcs, outArcs)
         {
-            PartialOrder = new SparseMatrix(transitionNames.Count());
-            transitionOrdering.Foreach(ordering =>
-            {
-                PartialOrder[ordering.Item1, ordering.Item2] = 1;
-                PartialOrder[ordering.Item2, ordering.Item1] = -1;
-            });
+            var x = transitionNames.Select(t => t.Key).Except(transitionOrdering.Select(t => t.Key));
+            var y = transitionOrdering.Union(x.ToDictionary(t => t, t => 0)); // baseline priority level
+            TransitionPriorities = y.ToDictionary(a => a.Key, a => a.Value);
         }
 
         /// <summary>
@@ -112,10 +109,19 @@ namespace PetriNetCore
 
         #region graph model and state data
         public string Id { get; set; }
-    	public SparseMatrix InMatrix {get;set;}
-    	public SparseMatrix OutMatrix {get;set;}
-    	public SparseMatrix FlowMatrix {get;set;}
-        public SparseMatrix PartialOrder { get; set; }
+
+        /*
+         * A note on how the matrices are constructed
+         * 
+         * Rows are for places and Columns are for transitions
+         * therefore M[i,j] is the adjacency of place i to transition j.
+         * M.GetRow(i) gets the adjacencies for place i and
+         * M.GetColumn(j) gets the adjacencies for transition j.
+         */
+        public SparseMatrix InMatrix { get; set; }
+        public SparseMatrix OutMatrix { get; set; }
+        public SparseMatrix FlowMatrix { get; set; }
+        public Dictionary<int, int> TransitionPriorities = new Dictionary<int, int>();
         public SparseVector Markings { get; set; }
         public Dictionary<int, string> Places = new Dictionary<int, string>();
         public Dictionary<int, string> Transitions = new Dictionary<int, string>();
@@ -128,8 +134,8 @@ namespace PetriNetCore
             Contract.Requires(Places.ContainsKey(placeId));
             Contract.Requires(Transitions.ContainsKey(transitionId));
             Contract.Ensures(OutMatrix[placeId, transitionId] == Contract.OldValue(OutMatrix[placeId, transitionId]) + 1);
- 
-        	OutMatrix[placeId, transitionId]++;
+
+            OutMatrix[placeId, transitionId]++;
         }
 
         public void AddArcIntoTransition(int placeId, int transitionId)
@@ -137,7 +143,7 @@ namespace PetriNetCore
             Contract.Requires(Places.ContainsKey(placeId));
             Contract.Requires(Transitions.ContainsKey(transitionId));
             Contract.Ensures(InMatrix[placeId, transitionId] == Contract.OldValue(InMatrix[placeId, transitionId]) + 1);
- 
+
             InMatrix[placeId, transitionId]++;
         }
 
@@ -151,7 +157,7 @@ namespace PetriNetCore
             Contract.Ensures(Contract.OldValue(Markings).Equals(Markings));
             Contract.Ensures(Contract.Result<int>() >= 0);
 
-			return (int)Markings[placeId];
+            return (int)Markings[placeId];
         }
 
         //[Pure]
@@ -253,25 +259,54 @@ namespace PetriNetCore
             Markings[placeId] = marking;
         }
 
-        SparseVector GetEnabledTransitions()
+        public IEnumerable<int> GetEnabledTransitions()
         {
-            Contract.Ensures(Contract.Result<SparseVector>() != null);
-            Contract.Ensures(Contract.Result<SparseVector>().Count == Transitions.Count);
-            
-        	// subtract the weights from the markings then sum each element in the resulting vectir
-        	// if the result is greater than or equal to zero then the transition is enabled
-            SparseVector result = new SparseVector(OutMatrix.Columns);
+            // subtract the weights from the markings then sum each element in the resulting vectir
+            // if the result is greater than or equal to zero then the transition is enabled
             for (int i = 0; i < OutMatrix.Columns; i++)
             {
-                result[i] = IsEnabled(i) ? 1 : 0;
+                if (IsEnabled(i))
+                    yield return i;
+            }
+        }
+
+        SparseVector CreateFiringPlan()
+        {
+            SparseVector result = new SparseVector(Transitions.Count);
+            if (IsConflicted())
+            {
+                var next = GetNextTransitionToFire();
+                if (next.HasValue)
+                    result[next.Value] = 1.0;
+            }
+            else
+            {
+                foreach (var transId in GetEnabledTransitions())
+                {
+                    result[transId] = 1;
+                }
             }
             return result;
         }
-        
+
+        public int? GetNextTransitionToFire()
+        {
+            var ets = GetEnabledTransitions();
+            return (from t in ets
+                    orderby GetTransitionPriority(t) descending
+                    select t).FirstOrDefault();
+        }
+
         public virtual void Fire()
         {
-            var enabledTransitions = GetEnabledTransitions();
-            Markings = Markings + (OutMatrix - InMatrix) * enabledTransitions;
+            var firingTransitions = GetEnabledTransitions().ToList(); // no laziness here, since enabled trans will change after the flow equation has been evaluated
+            Markings = Markings + (OutMatrix - InMatrix) * CreateFiringPlan();
+
+            foreach (var transId in firingTransitions)
+            {
+                if (TransitionFunctions.ContainsKey(transId))
+                    TransitionFunctions[transId].ForEach(a => a(transId));
+            }
         }
         #endregion
         [ContractInvariantMethod]
@@ -289,18 +324,40 @@ namespace PetriNetCore
             Contract.Invariant(OutMatrix.Rows == Places.Count, "out matrix is the wrong height");
         }
 
-        public int MaxPriority(int p, int p_2)
+        public int GetTransitionPriority(int t)
         {
-            if (PartialOrder[p, p_2] != 0)
-            {
-                return PartialOrder[p, p_2] > 0 ? p : p_2;
-            }
-            return p;
+            return TransitionPriorities.ContainsKey(t) ? TransitionPriorities[t] : 0;
         }
-
         public bool IsConflicted()
         {
-            return GetConflictingTransitions().Count() > 0;
+            return AllPlaces().Any(pid => PlaceIsConflicted(pid));
+        }
+        public bool PlaceIsConflicted(int placeId)
+        {
+            return GetEnabledTransitionsAdjacentToPlace(placeId).Count() > 1;
+        }
+
+        public IEnumerable<int> GetEnabledTransitionsAdjacentToPlace(int placeId)
+        {
+
+            var q = (from transId in GetPlaceOutArcs(placeId)
+                     where IsEnabled(transId)
+                     select transId).ToArray();
+            return q;
+        }
+
+        IEnumerable<int> GetPlaceOutArcs(int placeId)
+        {
+            foreach (var item in InMatrix.GetRow(placeId).GetIndexedEnumerator())
+            {
+                if (item.Value > 0)
+                    yield return item.Key;
+            }
+        }
+
+        private IEnumerable<int> AllPlaces()
+        {
+            return Places.Count() > 0 ? Places.Keys.AsEnumerable() : new int[] { };
         }
 
         public IEnumerable<ConflictSet> GetConflictingTransitions()

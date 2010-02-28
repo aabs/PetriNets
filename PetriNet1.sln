@@ -11,6 +11,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution 
 		notes.txt = notes.txt
 		PetriNet1.vsmdi = PetriNet1.vsmdi
 		pnml.ex1.xml = pnml.ex1.xml
+		README.txt = README.txt
 		TraceAndTestImpact.testsettings = TraceAndTestImpact.testsettings
 	EndProjectSection
 EndProject

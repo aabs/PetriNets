@@ -481,8 +481,9 @@ namespace TestProject1
                     {1, new List<InArc>(){new InArc(1),new InArc(2)}}
                 },
                new Dictionary<int, List<OutArc>>() { },
-               new[] { Tuple.Create(0, 1) });
-            Assert.AreEqual(0, p.MaxPriority(0, 1));
+               new Dictionary<int, int>() { { 0, 1 }, { 1, 2 } });
+            Assert.AreEqual(1, p.GetTransitionPriority(0));
+            Assert.AreEqual(2, p.GetTransitionPriority(1));
         }
 
         [TestMethod]
@@ -510,9 +511,83 @@ namespace TestProject1
                     {1, new List<InArc>(){new InArc(1),new InArc(2)}}
                 },
                new Dictionary<int, List<OutArc>>() { },
-               new[] { Tuple.Create(0, 1) });
+               new Dictionary<int, int>() { { 0, 1 }, { 1, 2 } });
+            var enabledTransitions = p.GetEnabledTransitions();
+            Assert.AreEqual(2, enabledTransitions.Count());
+            Assert.IsTrue(enabledTransitions.Contains(0));
+            Assert.IsTrue(enabledTransitions.Contains(1));
             Assert.IsTrue(p.IsConflicted());
-            var conflictedTransitions = p.GetConflictingTransitions();
+        }
+
+        [TestMethod]
+        public void TestPrioritySelection()
+        {
+            var p = new MatrixPetriNet("p",
+               new Dictionary<int, string> {
+                    {0, "p0"},
+                    {1, "p1"},
+                    {2, "p2"}
+                },
+               new Dictionary<int, int> 
+                    { 
+                        { 0, 1 } ,
+                        { 1, 1 } ,
+                        { 2, 1 } 
+                    },
+               new Dictionary<int, string> 
+                    { 
+                        { 0, "t1" },
+                        { 1, "t2" }
+                    },
+               new Dictionary<int, List<InArc>>(){
+                    {0, new List<InArc>(){new InArc(0),new InArc(1)}},
+                    {1, new List<InArc>(){new InArc(1),new InArc(2)}}
+                },
+               new Dictionary<int, List<OutArc>>() { },
+               new Dictionary<int, int>() { { 1, 1 } }); // t0 will be baseline at 0 and t1 will be 1, therefore next enabled transition should always be 1
+            int? transId = p.GetNextTransitionToFire();
+            Assert.IsTrue(transId.HasValue);
+            Assert.AreEqual(1, transId.Value);
+        }
+
+        [TestMethod]
+        public void TestPrioritySelection2()
+        {
+            var p = new MatrixPetriNet("p",
+               new Dictionary<int, string> {
+                    {0, "p0"},
+                    {1, "p1"},
+                    {2, "p2"},
+                    {3, "p3"}
+                },
+               new Dictionary<int, int> 
+                    { 
+                        { 0, 1 } ,
+                        { 1, 1 } ,
+                        { 2, 1 } ,
+                        { 3, 1 } 
+                    },
+               new Dictionary<int, string> 
+                    { 
+                        { 0, "t1" },
+                        { 1, "t2" },
+                        { 2, "t3" }
+                    },
+               new Dictionary<int, List<InArc>>(){
+                    {0, new List<InArc>(){new InArc(0),new InArc(1)}},
+                    {1, new List<InArc>(){new InArc(1),new InArc(2)}},
+                    {2, new List<InArc>(){new InArc(1),new InArc(2),new InArc(3)}}
+                },
+               new Dictionary<int, List<OutArc>>() { },
+               new Dictionary<int, int>() 
+               {
+                    { 0, 1 } ,
+                    { 1, 1 } ,
+                    { 2, 4 } 
+               }); // t0 will be baseline at 0 and t1 will be 1, therefore next enabled transition should always be 1
+            int? transId = p.GetNextTransitionToFire();
+            Assert.IsTrue(transId.HasValue);
+            Assert.AreEqual(2, transId.Value);
         }
     }
 }
