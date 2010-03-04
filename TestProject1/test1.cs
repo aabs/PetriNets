@@ -38,13 +38,17 @@ namespace Tests
         [TestMethod]
         public void Test1()
         {
-            var p = CreatePNTwoInOneOut();
-            AssertMarkings(p, new Dictionary<int, int>{ 
+            var m = new Marking(3, new Dictionary<int, int>{ 
                 { 0, 1 }, 
                 { 1, 1 },
                 { 2, 0 } });
-            p.Fire();
-            AssertMarkings(p, new Dictionary<int, int>{ 
+            var p = CreatePNTwoInOneOut();
+            AssertMarkings(m, new Dictionary<int, int>{ 
+                { 0, 1 }, 
+                { 1, 1 },
+                { 2, 0 } });
+            m = p.Fire(m);
+            AssertMarkings(m, new Dictionary<int, int>{ 
                 { 0, 0 }, 
                 { 1, 0 },
                 { 2, 1 } });
@@ -53,14 +57,19 @@ namespace Tests
         [TestMethod]
         public void Test2()
         {
-            var p = CreatePNTwoInTwoOut();
-            AssertMarkings(p, new Dictionary<int, int>{ 
+            var m = new Marking(4, new Dictionary<int, int>{ 
                 { 0, 1 }, 
                 { 1, 1 },
                 { 2, 0 },
                 { 3, 0 } });
-            p.Fire();
-            AssertMarkings(p, new Dictionary<int, int>{ 
+            var p = CreatePNTwoInTwoOut();
+            AssertMarkings(m, new Dictionary<int, int>{ 
+                { 0, 1 }, 
+                { 1, 1 },
+                { 2, 0 },
+                { 3, 0 } });
+            m = p.Fire(m);
+            AssertMarkings(m, new Dictionary<int, int>{ 
                 { 0, 0 }, 
                 { 1, 0 },
                 { 2, 1 },
@@ -70,13 +79,17 @@ namespace Tests
         [TestMethod]
         public void TestInhibition()
         {
-            var p = CreatePNInhibited();
-            AssertMarkings(p, new Dictionary<int, int>{ 
+            var m = new Marking(3, new Dictionary<int, int>{ 
                 { 0, 1 }, 
                 { 1, 1 },
                 { 2, 0 } });
-            p.Fire();
-            AssertMarkings(p, new Dictionary<int, int>{ 
+            var p = CreatePNInhibited();
+            AssertMarkings(m, new Dictionary<int, int>{ 
+                { 0, 1 }, 
+                { 1, 1 },
+                { 2, 0 } });
+            m = p.Fire(m);
+            AssertMarkings(m, new Dictionary<int, int>{ 
                 { 0, 1 }, 
                 { 1, 1 },
                 { 2, 0 } });
@@ -85,14 +98,15 @@ namespace Tests
         [TestMethod]
         public void TestInhibition2()
         {
+            var m = new Marking(3, new Dictionary<int, int> { { 0, 1 }, { 1, 1 } });
             var p = CreatePNInhibited();
-            p.SetMarking(1,0);
-            AssertMarkings(p, new Dictionary<int, int>{ 
+            m[1] = 0;
+            AssertMarkings(m, new Dictionary<int, int>{ 
                 { 0, 1 }, 
                 { 1, 0 },
                 { 2, 0 } });
-            p.Fire();
-            AssertMarkings(p, new Dictionary<int, int>{ 
+            m = p.Fire(m);
+            AssertMarkings(m, new Dictionary<int, int>{ 
                 { 0, 0 }, 
                 { 1, 0 },
                 { 2, 1 } });
@@ -101,13 +115,13 @@ namespace Tests
         [TestMethod]
         public void TestOutgoingWeight()
         {
+            var m = new Marking(2, new Dictionary<int, int> { { 0, 1 }, { 1, 0 } });
             var p = new GraphPetriNet(
                 "p",
                 new Dictionary<int, string> {
                     {0, "p0"},
                     {1, "p1"}
                 },
-                new Dictionary<int, int> { { 0, 1 }, { 1, 0 } },
                 new Dictionary<int, string> { { 0, "t0" } },
                 new Dictionary<int, List<InArc>>(){
                 	{0, new List<InArc>(){new InArc(0)}}
@@ -116,11 +130,11 @@ namespace Tests
                 	{0, new List<OutArc>(){new OutArc(1){Weight=5}}}
                 }
               );
-            AssertMarkings(p, new Dictionary<int, int>{ 
+            AssertMarkings(m, new Dictionary<int, int>{ 
                 { 0, 1 }, 
                 { 1, 0 }});        
-        	p.Fire();
-            AssertMarkings(p, new Dictionary<int, int>{ 
+        	m = p.Fire(m);
+            AssertMarkings(m, new Dictionary<int, int>{ 
                 { 0, 0 }, 
                 { 1, 5 }});        
         }
@@ -134,7 +148,7 @@ namespace Tests
                     {1, "p1"},
                     {2, "p2"}
                 },
-                new Dictionary<int, int> { { 0, 1 }, { 1, 1 } },
+                //new Dictionary<int, int> { { 0, 1 }, { 1, 1 } },
                 new Dictionary<int, string> { { 0, "t0" } },
                 new Dictionary<int, List<InArc>>(){
                     {0, new List<InArc>(){new InArc(0),new InArc(1, true)}}
@@ -156,7 +170,7 @@ namespace Tests
                     {2, "p2"},
                     {3, "p3"}
                 },
-                new Dictionary<int, int> { { 0, 1 }, { 1, 1 } },
+                //new Dictionary<int, int> { { 0, 1 }, { 1, 1 } },
                 new Dictionary<int, string> { { 0, "t0" } },
                 new Dictionary<int, List<InArc>>(){
                     {0, new List<InArc>(){new InArc(0),new InArc(1)}}
@@ -168,6 +182,10 @@ namespace Tests
             return p;
         }
 
+        public static Marking CreateMarking2()
+        {
+            return new Marking(2, new Dictionary<int, int> { { 0, 1 }, { 1, 1 } });
+        }
         private static GraphPetriNet CreatePNTwoInOneOut()
         {
             var p = new GraphPetriNet(
@@ -177,7 +195,6 @@ namespace Tests
                     {1, "p1"},
                     {2, "p2"}
                 },
-                new Dictionary<int, int> { { 0, 1 }, { 1, 1 } },
                 new Dictionary<int, string> { { 0, "t0" } },
                 new Dictionary<int, List<InArc>>(){
                     {0, new List<InArc>(){new InArc(0),new InArc(1)}}
@@ -188,22 +205,22 @@ namespace Tests
               );
             return p;
         }
-        public void AssertMarkings(GraphPetriNet p, Dictionary<int, int> markingsExpected)
+        public void AssertMarkings(Marking m, Dictionary<int, int> markingsExpected)
         {
             foreach (var marking in markingsExpected)
             {
-                Assert.AreEqual(marking.Value, p.GetMarking(marking.Key));
+                Assert.AreEqual(marking.Value, m[marking.Key]);
             }
         }
     }
 
     public class BasePNTester
     {
-        public void AssertMarkings(GraphPetriNet p, Dictionary<int, int> markingsExpected)
+        public void AssertMarkings(Marking m, Dictionary<int, int> markingsExpected)
         {
             foreach (var marking in markingsExpected)
             {
-                Assert.AreEqual(marking.Value, p.GetMarking(marking.Key));
+                Assert.AreEqual(marking.Value, m[marking.Key]);
             }
         }
 

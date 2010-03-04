@@ -78,6 +78,7 @@
     <Compile Include="CollectionExtensions.cs" />
     <Compile Include="OutArc.cs" />
     <Compile Include="GraphPetriNet.cs" />
+    <Compile Include="PetriNetBase.cs" />
     <Compile Include="PnmlModelLoader.cs">
       <SubType>Code</SubType>
     </Compile>

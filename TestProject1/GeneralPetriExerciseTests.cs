@@ -24,16 +24,25 @@ namespace TestProject1
         public void TestTest1()
         {
             var p = CreatePNTwoInOneOut();
-            AssertMarkings(p, new Dictionary<int, int>{ 
+            var m = new Marking(3, new Dictionary<int, int>{ 
                 { 0, 1 }, 
                 { 1, 1 },
                 { 2, 0 } });
-            p.Fire();
-            AssertMarkings(p, new Dictionary<int, int>{ 
+            AssertMarkings(m, new Dictionary<int, double>{ 
+                { 0, 1 }, 
+                { 1, 1 },
+                { 2, 0 } });
+            var m2 = p.Fire(m);
+            AssertMarkings(m2, new Dictionary<int, double>{ 
                 { 0, 0 }, 
                 { 1, 0 },
                 { 2, 1 } });
 
+        }
+
+        private static Marking CreateMarking2()
+        {
+            return new Marking(2, new Dictionary<int, int> { { 0, 1 }, { 1, 1 } });
         }
 
         public static GraphPetriNet CreatePNTwoInOneOut()
@@ -45,7 +54,7 @@ namespace TestProject1
                     {1, "p1"},
                     {2, "p2"}
                 },
-                new Dictionary<int, int> { { 0, 1 }, { 1, 1 }, { 2, 0 } },
+                //                new Dictionary<int, int> { { 0, 1 }, { 1, 1 }, { 2, 0 } },
                 new Dictionary<int, string> { { 0, "t0" } },
                 new Dictionary<int, List<InArc>>(){
                     {0, new List<InArc>(){new InArc(0),new InArc(1)}}
@@ -57,11 +66,11 @@ namespace TestProject1
             return p;
         }
 
-        public void AssertMarkings<T1, T2>(GraphPetriNet p, Dictionary<T1, T2> markingsExpected)
+        public void AssertMarkings<T1, T2>(Marking p, Dictionary<T1, T2> markingsExpected)
         {
             foreach (var marking in markingsExpected)
             {
-                Assert.AreEqual(marking.Value, p.GetMarking(Convert.ToInt32(marking.Key)));
+                Assert.AreEqual(marking.Value, p[Convert.ToInt32(marking.Key)]);
             }
         }
 
@@ -74,13 +83,13 @@ namespace TestProject1
         [TestMethod]
         public void Test1()
         {
+            var m = new Marking(3, new Dictionary<int, int> { { 0, 1 }, { 1, 1 }, { 2, 0 } });
             var p = new GraphPetriNet("p",
                 new Dictionary<int, string> {
                     {0, "p0"},
                     {1, "p1"},
                     {2, "p2"}
                 },
-                new Dictionary<int, int> { { 0, 1 }, { 1, 1 }, { 2, 0 } },
                 new Dictionary<int, string> { { 0, "t0" } },
                 new Dictionary<int, List<InArc>>(){
                     {0, new List<InArc>(){new InArc(0),new InArc(1)}}
@@ -88,18 +97,18 @@ namespace TestProject1
                 new Dictionary<int, List<OutArc>>(){
                     {0, new List<OutArc>(){new OutArc(2)}}
                 });
-            Assert.AreEqual(1, p.GetMarking(1));
+            Assert.AreEqual(1, m[1]);
         }
 
         [TestMethod]
         public void Test2()
         {
+            var m = new Marking(2, new Dictionary<int, int> { { 0, 0 }, { 1, 0 } });
             var p = new GraphPetriNet("p",
                 new Dictionary<int, string> {
                     {0, "p0"},
                     {1, "p1"}
                 },
-                new Dictionary<int, int> { { 0, 0 }, { 1, 0 } },
                 new Dictionary<int, string> { { 0, "t0" } },
                 new Dictionary<int, List<InArc>>(){
                     {0, new List<InArc>(){new InArc(0)}}
@@ -108,29 +117,32 @@ namespace TestProject1
                     {0, new List<OutArc>(){new OutArc(1)}}
                 });
 
-            p.SetMarking(0, 1);
-            Assert.AreEqual(true, p.IsEnabled(0));
+            m[0] = 1;
+            Assert.AreEqual(true, p.IsEnabled(0, m));
         }
 
         [TestMethod]
         public void Test3()
         {
+            var m = new Marking(2, new Dictionary<int, int> { { 0, 1 }, { 1, 1 } });
             var p = TestClass2.CreatePNTwoInOneOut();
 
-            Assert.AreEqual(true, p.IsEnabled(0));
-            p.SetMarking(0, 0);
-            Assert.AreEqual(false, p.IsEnabled(0));
+            Assert.AreEqual(true, p.IsEnabled(0, m));
+            m[0] = 0;
+            Assert.AreEqual(false, p.IsEnabled(0, m));
         }
 
         [TestMethod]
         public void Test4()
         {
+            var m = new Marking(2,
+                new Dictionary<int, int> { { 0, 1 }, { 1, 0 } });
+
             var p = new GraphPetriNet("p",
                 new Dictionary<int, string> {
                     {0, "p0"},
                     {1, "p1"}
                 },
-                new Dictionary<int, int> { { 0, 1 }, { 1, 0 } },
                 new Dictionary<int, string> { { 0, "t0" } },
                 new Dictionary<int, List<InArc>>(){
                     {0, new List<InArc>(){new InArc(0)}}
@@ -139,24 +151,25 @@ namespace TestProject1
                     {0, new List<OutArc>(){new OutArc(1)}}
                 });
 
-            Assert.AreEqual(1, p.GetMarking(0));
-            Assert.AreEqual(0, p.GetMarking(1));
-            Assert.AreEqual(true, p.IsEnabled(0));
-            p.Fire();
-            Assert.AreEqual(0, p.GetMarking(0));
-            Assert.AreEqual(1, p.GetMarking(1));
+            Assert.AreEqual(1, m[0]);
+            Assert.AreEqual(0, m[1]);
+            Assert.AreEqual(true, p.IsEnabled(0, m));
+            m = p.Fire(m);
+            Assert.AreEqual(0, m[0]);
+            Assert.AreEqual(1, m[1]);
         }
 
         [TestMethod]
         public void Test5()
         {
+            var m = new Marking(3,
+                new Dictionary<int, int> { { 0, 1 }, { 1, 0 }, { 2, 0 } });
             var p = new GraphPetriNet("p",
                 new Dictionary<int, string> {
                     {0, "p0"},
                     {1, "p1"},
                     {2, "p2"}
                 },
-                new Dictionary<int, int> { { 0, 1 }, { 1, 0 }, { 2, 0 } },
                 new Dictionary<int, string> { { 0, "t0" } },
                 new Dictionary<int, List<InArc>>{
                     {0, new List<InArc>(){new InArc(0),new InArc(2)}}
@@ -165,18 +178,26 @@ namespace TestProject1
                     {0, new List<OutArc>(){new OutArc(1)}}
                 });
 
-            Assert.AreEqual(false, p.IsEnabled(0));
-            p.SetMarking(2, 1);
-            Assert.AreEqual(true, p.IsEnabled(0));
-            p.Fire();
-            Assert.AreEqual(0, p.GetMarking(0));
-            Assert.AreEqual(1, p.GetMarking(1));
-            Assert.AreEqual(0, p.GetMarking(2));
+            Assert.IsFalse(p.IsEnabled(0, m));
+            m[2] = 1;
+            Assert.IsTrue(p.IsEnabled(0, m));
+            m = p.Fire(m);
+            Assert.AreEqual(0, m[0]);
+            Assert.AreEqual(1, m[1]);
+            Assert.AreEqual(0, m[2]);
         }
 
         [TestMethod]
         public void Test6()
         {
+            var m = new Marking(4,
+                new Dictionary<int, int> 
+                    { 
+                        { (int)Places.p1, 0 }, 
+                        { (int)Places.p2, 0 }, 
+                        { (int)Places.p3, 0 }, 
+                        { (int)Places.p4, 0 } 
+                    });
             var p = new GraphPetriNet("p",
                 new Dictionary<int, string> {
                     {(int)Places.p1, "p1"},
@@ -184,13 +205,6 @@ namespace TestProject1
                     {(int)Places.p3, "p3"},
                     {(int)Places.p4, "p4"}
                 },
-                new Dictionary<int, int> 
-                    { 
-                        { (int)Places.p1, 0 }, 
-                        { (int)Places.p2, 0 }, 
-                        { (int)Places.p3, 0 }, 
-                        { (int)Places.p4, 0 } 
-                    },
                 new Dictionary<int, string> 
                     { 
                         { (int)Transitions.t1, "t1" },
@@ -219,70 +233,71 @@ namespace TestProject1
              *                |
              *                P4
              * */
-            AssertMarkings(p, new Dictionary<Places, int>{ 
-                { Places.p1, 0 }, 
-                { Places.p2, 0 },
-                { Places.p3, 0 },
-                { Places.p4, 0 } });
+            AssertMarkings(m, new Dictionary<int, double>{ 
+                { (int)Places.p1, 0.0 }, 
+                { (int)Places.p2, 0.0 },
+                { (int)Places.p3, 0.0 },
+                { (int)Places.p4, 0.0 } });
 
-            p.SetMarking((int)Places.p1, 1);
-            AssertMarkings(p, new Dictionary<Places, int>{ 
-                { Places.p1, 1 }, 
-                { Places.p2, 0 },
-                { Places.p3, 0 },
-                { Places.p4, 0 } });
+            m[(int)Places.p1] = 1;
+            AssertMarkings(m, new Dictionary<int, double>{ 
+                { (int)Places.p1, 1 }, 
+                { (int)Places.p2, 0 },
+                { (int)Places.p3, 0 },
+                { (int)Places.p4, 0 } });
 
-            p.Fire();
-            AssertMarkings(p, new Dictionary<Places, int>{ 
-                { Places.p1, 0 }, 
-                { Places.p2, 1 },
-                { Places.p3, 0 },
-                { Places.p4, 0 } });
+            m = p.Fire(m);
+            AssertMarkings(m, new Dictionary<int, double>{ 
+                { (int)Places.p1, 0 }, 
+                { (int)Places.p2, 1 },
+                { (int)Places.p3, 0 },
+                { (int)Places.p4, 0 } });
 
-            p.Fire();
-            AssertMarkings(p, new Dictionary<Places, int>{ 
-                { Places.p1, 0 }, 
-                { Places.p2, 0 },
-                { Places.p3, 1 },
-                { Places.p4, 0 } });
+            m = p.Fire(m);
+            AssertMarkings(m, new Dictionary<int, double>{ 
+                { (int)Places.p1, 0 }, 
+                { (int)Places.p2, 0 },
+                { (int)Places.p3, 1 },
+                { (int)Places.p4, 0 } });
 
-            p.SetMarking((int)Places.p4, 1);
-            AssertMarkings(p, new Dictionary<Places, int>{ 
-                { Places.p1, 0 }, 
-                { Places.p2, 0 },
-                { Places.p3, 1 },
-                { Places.p4, 1 } });
+            m[(int)Places.p4] = 1;
+            AssertMarkings(m, new Dictionary<int, double>{ 
+                { (int)Places.p1, 0 }, 
+                { (int)Places.p2, 0 },
+                { (int)Places.p3, 1 },
+                { (int)Places.p4, 1 } });
 
-            p.Fire();
-            AssertMarkings(p, new Dictionary<Places, int>{ 
-                { Places.p1, 0 }, 
-                { Places.p2, 1 },
-                { Places.p3, 1 },
-                { Places.p4, 0 } });
+            m = p.Fire(m);
+            AssertMarkings(m, new Dictionary<int, double>{ 
+                { (int)Places.p1, 0 }, 
+                { (int)Places.p2, 1 },
+                { (int)Places.p3, 1 },
+                { (int)Places.p4, 0 } });
 
-            p.Fire();
-            AssertMarkings(p, new Dictionary<Places, int>{ 
-                { Places.p1, 0 }, 
-                { Places.p2, 0 },
-                { Places.p3, 2 },
-                { Places.p4, 0 } });
+            m = p.Fire(m);
+            AssertMarkings(m, new Dictionary<int, double>{ 
+                { (int)Places.p1, 0 }, 
+                { (int)Places.p2, 0 },
+                { (int)Places.p3, 2 },
+                { (int)Places.p4, 0 } });
         }
 
         [TestMethod]
         public void Test7() // a bifurcating transition
         {
+            var m = new Marking(3,
+                new Dictionary<int, int> 
+                    { 
+                        { (int)Places.p1, 0 }, 
+                        { (int)Places.p2, 0 }, 
+                        { (int)Places.p3, 0 } 
+                    });
             var p = new GraphPetriNet("p",
                 new Dictionary<int, string> {
                     {(int)Places.p1, "p1"},
                     {(int)Places.p2, "p2"},
                     {(int)Places.p3, "p3"}
                 },
-                new Dictionary<int, int> 
-                    { 
-                        { (int)Places.p1, 0 }, 
-                        { (int)Places.p2, 0 }, 
-                        { (int)Places.p3, 0 } 
-                    },
                 new Dictionary<int, string> 
                     { 
                         { (int)Transitions.t1, "t1" }
@@ -295,35 +310,35 @@ namespace TestProject1
                                                              new OutArc((int)Places.p3)}}
                 });
 
-            AssertMarkings(p, new Dictionary<Places, int>{ 
-                { Places.p1, 0 }, 
-                { Places.p2, 0 },
-                { Places.p3, 0 } });
+            AssertMarkings(m, new Dictionary<int, double>{ 
+                { (int)Places.p1, 0 }, 
+                { (int)Places.p2, 0 },
+                { (int)Places.p3, 0 } });
 
-            p.SetMarking((int)Places.p1, 1);
-            AssertMarkings(p, new Dictionary<Places, int>{ 
-                { Places.p1, 1 }, 
-                { Places.p2, 0 },
-                { Places.p3, 0 } });
+            m[(int)Places.p1] = 1;
+            AssertMarkings(m, new Dictionary<int, double>{ 
+                { (int)Places.p1, 1 }, 
+                { (int)Places.p2, 0 },
+                { (int)Places.p3, 0 } });
 
-            p.Fire();
-            AssertMarkings(p, new Dictionary<Places, int>{ 
-                { Places.p1, 0 }, 
-                { Places.p2, 1 },
-                { Places.p3, 1 } });
+            m = p.Fire(m);
+            AssertMarkings(m, new Dictionary<int, double>{ 
+                { (int)Places.p1, 0 }, 
+                { (int)Places.p2, 1 },
+                { (int)Places.p3, 1 } });
         }
 
         [TestMethod]
         public void TestSelfTransition()
         {
+            var m = new Marking(1, new Dictionary<int, int> 
+                    { 
+                        { (int)Places.p1, 0 } 
+                    });
             var p = new GraphPetriNet("p",
                 new Dictionary<int, string> {
                     {(int)Places.p1, "p1"}
                 },
-                new Dictionary<int, int> 
-                    { 
-                        { (int)Places.p1, 0 } 
-                    },
                 new Dictionary<int, string> 
                     { 
                         { (int)Transitions.t1, "t1" }
@@ -334,23 +349,24 @@ namespace TestProject1
                 new Dictionary<int, List<OutArc>>(){
                     {(int)Transitions.t1, new List<OutArc>(){new OutArc((int)Places.p1)}}
                 });
-            p.SetMarking((int)Places.p1, 1);
-            Assert.AreEqual(1, p.GetMarking((int)Places.p1));
-            p.Fire();
-            Assert.AreEqual(1, p.GetMarking((int)Places.p1));
+            m[(int)Places.p1] = 1;
+            Assert.AreEqual(1, m[(int)Places.p1]);
+            m = p.Fire(m);
+            Assert.AreEqual(1, m[(int)Places.p1]);
         }
 
         [TestMethod]
         public void TestDoubleSelfTransition()
         {
+            var m = new Marking(1,
+                new Dictionary<int, int> 
+                    { 
+                        { (int)Places.p1, 1 } 
+                    });
             var p = new GraphPetriNet("p",
                 new Dictionary<int, string> {
                     {(int)Places.p1, "p1"}
                 },
-                new Dictionary<int, int> 
-                    { 
-                        { (int)Places.p1, 1 } 
-                    },
                 new Dictionary<int, string> 
                     { 
                         { (int)Transitions.t1, "t1" },
@@ -364,16 +380,16 @@ namespace TestProject1
                     {(int)Transitions.t1, new List<OutArc>(){new OutArc((int)Places.p1)}},
                     {(int)Transitions.t2, new List<OutArc>(){new OutArc((int)Places.p1)}}
                 });
-            Assert.AreEqual(1, p.GetMarking((int)Places.p1));
-            p.Fire();
-            Assert.AreEqual(1, p.GetMarking((int)Places.p1));
+            Assert.AreEqual(1, m[(int)Places.p1]);
+            m = p.Fire(m);
+            Assert.AreEqual(1, m[(int)Places.p1]);
         }
 
-        public void AssertMarkings<T1, T2>(GraphPetriNet p, Dictionary<T1, T2> markingsExpected)
+        public void AssertMarkings<T1, T2>(Marking m, Dictionary<T1, T2> markingsExpected)
         {
             foreach (var marking in markingsExpected)
             {
-                Assert.AreEqual(marking.Value, p.GetMarking(Convert.ToInt32(marking.Key)));
+                Assert.AreEqual(marking.Value, m[Convert.ToInt32(marking.Key)]);
             }
         }
 
@@ -382,6 +398,7 @@ namespace TestProject1
         {
             var path = @"C:\shared.datastore\repository\personal\dev\prototypes\Automata\PetriNet\pnml.ex1.xml";
             var pnSeq = PnmlModelLoader.Load(path).ToList();
+            var markings = PnmlModelLoader.LoadMarkings(path, pnSeq).ToList();
             Assert.IsNotNull(pnSeq);
             Assert.AreEqual(2, pnSeq.Count());
             Assert.AreEqual("n2", pnSeq.ElementAt(0).Id);
@@ -392,23 +409,24 @@ namespace TestProject1
             Assert.AreEqual(1, pn1.PlaceOutArcs.Count);
             Assert.AreEqual(1, pn1.InArcs.Count);
             Assert.AreEqual(1, pn1.OutArcs.Count);
-            Assert.AreEqual(1, pn1.Markings.Count);
-            pn1.Fire();
+            Assert.AreEqual(2, markings.Count);
+            pn1.Fire(markings.First().Value);
         }
 
         [TestMethod]
         public void TestTransitionFunctionExecution()
         {
+            var m = new Marking(2,
+                new Dictionary<int, int> 
+                    { 
+                        { 0, 2 } ,
+                        { 1, 0 } 
+                    });
             var p = new GraphPetriNet("p",
                 new Dictionary<int, string> {
                     {0, "p0"},
                     {1, "p1"}
                 },
-                new Dictionary<int, int> 
-                    { 
-                        { 0, 2 } ,
-                        { 1, 0 } 
-                    },
                 new Dictionary<int, string> 
                     { 
                         { 0, "t0" }
@@ -419,11 +437,11 @@ namespace TestProject1
                 new Dictionary<int, List<OutArc>>(){
                     {0, new List<OutArc>(){new OutArc(1)}}
                 });
-            Assert.AreEqual(2, p.GetMarking(0));
+            Assert.AreEqual(2, m[0]);
             var someLocal = 0;
-            p.SetMarking(0, 1);
+            m[0] = 1;
             p.RegisterFunction(0, (t) => someLocal += 1);
-            p.Fire();
+            p.Fire(m);
             Assert.AreEqual(1, someLocal);
         }
 
@@ -462,14 +480,15 @@ namespace TestProject1
         [TestMethod]
         public void TestInputTransition()
         {
+            var m = new Marking(1,
+                new Dictionary<int, int> 
+                    { 
+                        { 0, 0 } 
+                    });
             var p = new GraphPetriNet("p",
                 new Dictionary<int, string> {
                     {0, "p0"}
                 },
-                new Dictionary<int, int> 
-                    { 
-                        { 0, 0 } 
-                    },
                 new Dictionary<int, string> 
                     { 
                         { 0, "Ti" }
@@ -478,27 +497,26 @@ namespace TestProject1
                 new Dictionary<int, List<OutArc>>(){
                     {0, new List<OutArc>(){new OutArc(0)}}
                 });
-            Assert.AreEqual(0, p.GetMarking(0));
-            Assert.IsTrue(p.IsEnabled(0));
-            p.Fire();
-            Assert.AreEqual(1, p.GetMarking(0));
-            Assert.IsTrue(p.IsEnabled(0));
-            p.Fire();
-            Assert.AreEqual(2, p.GetMarking(0));
-            Assert.IsTrue(p.IsEnabled(0));
+            Assert.IsTrue(p.IsEnabled(0, m));
+            m = p.Fire(m);
+            Assert.AreEqual(1, m[0]);
+            Assert.IsTrue(p.IsEnabled(0, m));
+            m = p.Fire(m);
+            Assert.AreEqual(2, m[0]);
+            Assert.IsTrue(p.IsEnabled(0, m));
         }
 
         [TestMethod]
         public void TestDrainTransition()
         {
+            var m = new Marking(1, new Dictionary<int, int> 
+                    { 
+                        { 0, 5 } 
+                    });
             var p = new GraphPetriNet("p",
                 new Dictionary<int, string> {
                     {0, "p0"}
                 },
-                new Dictionary<int, int> 
-                    { 
-                        { 0, 5 } 
-                    },
                 new Dictionary<int, string> 
                     { 
                         { 0, "Ti" }
@@ -510,9 +528,9 @@ namespace TestProject1
 
             for (int i = 5; i >= 0; i--)
             {
-                Assert.AreEqual(i, p.GetMarking(0));
-                Assert.AreEqual(i > 0, p.IsEnabled(0));
-                p.Fire();
+                Assert.AreEqual(i, m[0]);
+                Assert.AreEqual(i > 0, p.IsEnabled(0, m));
+                m = p.Fire(m);
             }
         }
 
@@ -525,12 +543,6 @@ namespace TestProject1
                     {1, "p1"},
                     {2, "p2"}
                 },
-               new Dictionary<int, int> 
-                    { 
-                        { 0, 1 } ,
-                        { 1, 1 } ,
-                        { 2, 1 } 
-                    },
                new Dictionary<int, string> 
                     { 
                         { 0, "t1" },
@@ -549,18 +561,19 @@ namespace TestProject1
         [TestMethod]
         public void TestConflictDetection()
         {
+            var m = new Marking(3,
+               new Dictionary<int, int> 
+                    { 
+                        { 0, 1 } ,
+                        { 1, 1 } ,
+                        { 2, 1 } 
+                    });
             var p = new GraphPetriNet("p",
                new Dictionary<int, string> {
                     {0, "p0"},
                     {1, "p1"},
                     {2, "p2"}
                 },
-               new Dictionary<int, int> 
-                    { 
-                        { 0, 1 } ,
-                        { 1, 1 } ,
-                        { 2, 1 } 
-                    },
                new Dictionary<int, string> 
                     { 
                         { 0, "t1" },
@@ -572,28 +585,29 @@ namespace TestProject1
                 },
                new Dictionary<int, List<OutArc>>() { },
                new Dictionary<int, int>() { { 0, 1 }, { 1, 2 } });
-            var enabledTransitions = p.AllEnabledTransitions();
+            var enabledTransitions = p.AllEnabledTransitions(m);
             Assert.AreEqual(2, enabledTransitions.Count());
             Assert.IsTrue(enabledTransitions.Contains(0));
             Assert.IsTrue(enabledTransitions.Contains(1));
-            Assert.IsTrue(p.IsConflicted());
+            Assert.IsTrue(p.IsConflicted(m));
         }
 
         [TestMethod]
         public void TestPrioritySelection()
         {
+            var m = new Marking(3,
+               new Dictionary<int, int> 
+                    { 
+                        { 0, 1 } ,
+                        { 1, 1 } ,
+                        { 2, 1 } 
+                    });
             var p = new GraphPetriNet("p",
                new Dictionary<int, string> {
                     {0, "p0"},
                     {1, "p1"},
                     {2, "p2"}
                 },
-               new Dictionary<int, int> 
-                    { 
-                        { 0, 1 } ,
-                        { 1, 1 } ,
-                        { 2, 1 } 
-                    },
                new Dictionary<int, string> 
                     { 
                         { 0, "t1" },
@@ -605,13 +619,21 @@ namespace TestProject1
                 },
                new Dictionary<int, List<OutArc>>() { },
                new Dictionary<int, int>() { { 1, 1 } }); // t0 will be baseline at 0 and t1 will be 1, therefore next enabled transition should always be 1
-            int? transId = p.GetNextTransitionToFire();
+            int? transId = p.GetNextTransitionToFire(m);
             Assert.IsTrue(transId.HasValue);
             Assert.AreEqual(1, transId.Value);
         }
         [TestMethod]
         public void TestPrioritySelection2()
         {
+            var m = new Marking(4,
+              new Dictionary<int, int> 
+                    { 
+                        { 0, 1 } ,
+                        { 1, 1 } ,
+                        { 2, 1 } ,
+                        { 3, 1 } 
+                    });
             var p = new GraphPetriNet("p",
                new Dictionary<int, string> {
                     {0, "p0"},
@@ -619,13 +641,6 @@ namespace TestProject1
                     {2, "p2"},
                     {3, "p3"}
                 },
-               new Dictionary<int, int> 
-                    { 
-                        { 0, 1 } ,
-                        { 1, 1 } ,
-                        { 2, 1 } ,
-                        { 3, 1 } 
-                    },
                new Dictionary<int, string> 
                     { 
                         { 0, "t1" },
@@ -644,7 +659,7 @@ namespace TestProject1
                     { 1, 1 } ,
                     { 2, 4 } 
                }); // t0 will be baseline at 0 and t1 will be 1, therefore next enabled transition should always be 1
-            int? transId = p.GetNextTransitionToFire();
+            int? transId = p.GetNextTransitionToFire(m);
             Assert.IsTrue(transId.HasValue);
             Assert.AreEqual(2, transId.Value);
         }

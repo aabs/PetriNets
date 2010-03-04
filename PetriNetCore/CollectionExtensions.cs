@@ -6,13 +6,13 @@ namespace PetriNetCore
 {
     public static class CollectionExtensions
     {
-        public static int SafeGet(this Dictionary<int, int> d, int k)
+        public static V SafeGet<K,V>(this Dictionary<K, V> d, K k)
         {
             if (d.ContainsKey(k))
             {
                 return d[k];
             }
-            return default(int);
+            return default(V);
         }
 
         public static IEnumerable<TResult> Map<TInput, TResult>(this IEnumerable<TInput> seq, Func<TInput, TResult> mapping)

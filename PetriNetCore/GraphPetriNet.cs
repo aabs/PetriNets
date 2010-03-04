@@ -6,14 +6,14 @@ using dnAnalytics.LinearAlgebra;
 
 namespace PetriNetCore
 {
-    public class GraphPetriNet
+    public class GraphPetriNet : PetriNetBase
     {
         #region ctors
         public GraphPetriNet()
         {
         }
 
-        public GraphPetriNet(
+/*        public GraphPetriNet(
             string id,
             IEnumerable<Tuple<int, string, int>> places,
             IEnumerable<Tuple<int, string>> transitions,
@@ -34,10 +34,9 @@ namespace PetriNetCore
             ImportTransitions(transitions);
             ImportArcs(arcs);
         }
-
+        */
         public GraphPetriNet(string id,
                         Dictionary<int, string> placeNames,
-                        Dictionary<int, int> markings,
                         Dictionary<int, string> transitionNames,
                         Dictionary<int, List<InArc>> inArcs,
                         Dictionary<int, List<OutArc>> outArcs
@@ -47,7 +46,6 @@ namespace PetriNetCore
             Contract.Requires(placeNames != null);
             Contract.Requires(placeNames.Count > 0);
             Contract.Requires(placeNames.All(pn => !string.IsNullOrEmpty(pn.Value)));
-            Contract.Requires(markings != null);
             Contract.Requires(transitionNames != null);
             Contract.Requires(transitionNames.Count > 0);
             Contract.Requires(transitionNames.All(tn => !string.IsNullOrEmpty(tn.Value)));
@@ -61,9 +59,7 @@ namespace PetriNetCore
 
             Id = id;
             Places = placeNames;
-            Markings = markings;
             Transitions = transitionNames;
-            Markings = markings;
             InArcs = inArcs;
 
             // each arc into a transition can be seen as an arc out of a place 
@@ -85,22 +81,21 @@ namespace PetriNetCore
 
         public GraphPetriNet(string id,
                 Dictionary<int, string> placeNames,
-                Dictionary<int, int> markings,
                 Dictionary<int, string> transitionNames,
                 Dictionary<int, List<InArc>> inArcs,
                 Dictionary<int, List<OutArc>> outArcs,
                 Dictionary<int, int> transitionOrdering)
-            : this(id, placeNames, markings, transitionNames, inArcs, outArcs)
+            : this(id, placeNames, transitionNames, inArcs, outArcs)
         {
             var x = transitionNames.Select(t => t.Key).Except(transitionOrdering.Select(t => t.Key));
             var y = transitionOrdering.Union(x.ToDictionary(t => t, t => 0)); // baseline priority level
-            TransitionPriorities = y.ToDictionary(a=>a.Key, a=>a.Value);
+            TransitionPriorities = y.ToDictionary(a => a.Key, a => a.Value);
         }
 
 
         #endregion
 
-        #region importation of models
+/*        #region importation of models
         private void ImportArcs(IEnumerable<ArcDto> arcs)
         {
             foreach (var arc in arcs)
@@ -133,18 +128,18 @@ namespace PetriNetCore
             transitions.Foreach(x => Transitions.Add(x.Item1, x.Item2));
         }
         #endregion
-
+        */
         #region graph model and state data
         public string Id { get; set; }
 
         public Dictionary<int, string> Places = new Dictionary<int, string>();
         public Dictionary<int, string> Transitions = new Dictionary<int, string>();
 
-        public Dictionary<int, int> Markings = new Dictionary<int, int>();
+        //        public Dictionary<int, int> Markings = new Dictionary<int, int>();
         public Dictionary<int, List<InArc>> InArcs = new Dictionary<int, List<InArc>>();
         public Dictionary<int, List<OutArc>> OutArcs = new Dictionary<int, List<OutArc>>();
         public Dictionary<int, List<OutArc>> PlaceOutArcs = new Dictionary<int, List<OutArc>>();
-        public Dictionary<int, int> TransitionPriorities = new Dictionary<int,int>();
+        public Dictionary<int, int> TransitionPriorities = new Dictionary<int, int>();
         public Dictionary<int, List<Action<int>>> TransitionFunctions = new Dictionary<int, List<Action<int>>>();
         #endregion
 
@@ -207,28 +202,15 @@ namespace PetriNetCore
         #endregion
 
         #region accessors
-        public int GetMarking(int placeId)
-        {
-#if USING_CONTRACTS
-            Contract.Requires(Places.ContainsKey(placeId));
-#endif
-            if (!Markings.ContainsKey(placeId))
-            {
-                return 0;
-            }
-
-            return Markings[placeId];
-        }
-
-        internal IEnumerable<InArc> InhibitorsIntoTransition(int transitionId)
+        public override IEnumerable<int> InhibitorsIntoTransition(int transitionId)
         {
             if (InArcs.ContainsKey(transitionId))
             {
                 return from a in InArcs[transitionId]
                        where a.IsInhibitor
-                       select a;
+                       select a.Source;
             }
-            return new InArc[] { };
+            return new int[] { };
         }
 
         internal IEnumerable<InArc> GetInArcs(int transitionId)
@@ -252,17 +234,17 @@ namespace PetriNetCore
             return TransitionFunctions[transitionId];
         }
 
-        internal IEnumerable<InArc> NonInhibitorsIntoTransition(int transitionId)
+        public override IEnumerable<int> NonInhibitorsIntoTransition(int transitionId)
         {
             if (!InArcs.ContainsKey(transitionId))
-                return new InArc[] { };
-            return GetInArcs(transitionId).Except(InhibitorsIntoTransition(transitionId));
+                return new int[] { };
+            return GetInArcs(transitionId).Where(x => !x.IsInhibitor).Select(x => x.Source);
         }
 
-        public IEnumerable<int> AllEnabledTransitions()
+        public IEnumerable<int> AllEnabledTransitions(Marking m)
         {
             return (from t in Transitions
-                    where IsEnabled(t.Key)
+                    where IsEnabled(t.Key, m)
                     select t.Key);
         }
 
@@ -286,20 +268,25 @@ namespace PetriNetCore
             return result;
         }
 
-        internal IEnumerable<int> AllPlaces()
+        public override IEnumerable<int> AllPlaces()
         {
             return Places.Keys;
-/*            var result = AllSourcePlaces()
-                .Select(x => x.Target)
-                .Concat(AllDestinationPlaces()
-                            .Select(y => y.Source)).ToList();
-            return result;*/
+            /*            var result = AllSourcePlaces()
+                            .Select(x => x.Target)
+                            .Concat(AllDestinationPlaces()
+                                        .Select(y => y.Source)).ToList();
+                        return result;*/
         }
 
-        internal IEnumerable<int> AllMarkedPlaces()
+        internal IEnumerable<int> AllMarkedPlaces(Marking m)
         {
-            var result = (from p in Markings select p.Key).ToList();
-            return result;
+            for (int i = 0; i < m.Count; i++)
+            {
+                if (m[i] > 0)
+                {
+                    yield return i;
+                }
+            }
         }
 
         internal IEnumerable<int> PlacesFeedingIntoTransitions()
@@ -308,36 +295,14 @@ namespace PetriNetCore
             return result;
         }
 
-        public bool IsConflicted()
-        {
-            return AllPlaces().Any(pid => PlaceIsConflicted(pid));
-        }
 
-        public IEnumerable<int> GetEnabledTransitionsAdjacentToPlace(int placeId)
-        {
 
-            var q = (from outArc in GetPlaceOutArcs(placeId)
-                    where IsEnabled(outArc.Target)
-                    select outArc.Target).ToArray();
-            return q;
-        }
-
-        IEnumerable<OutArc> GetPlaceOutArcs(int placeId)
-        {
-            return PlaceOutArcs.ContainsKey(placeId) ? PlaceOutArcs[placeId].AsEnumerable() : new OutArc[] { };
-        }
-
-        public IEnumerable<int> GetConflictedPlaces()
+        public IEnumerable<int> GetConflictedPlaces(Marking m)
         {
             var q = from p in AllPlaces()
-                    where PlaceIsConflicted(p)
+                    where PlaceIsConflicted(p, m)
                     select p;
             return q;
-        }
-
-        public bool PlaceIsConflicted(int placeId)
-        {
-            return GetEnabledTransitionsAdjacentToPlace(placeId).Count() > 1;
         }
 
         private IEnumerable<int> SharedInputPlaces(int t1, int t2)
@@ -360,62 +325,45 @@ namespace PetriNetCore
         #endregion
 
         #region net execution
-        bool AllInhibitorsAreFromEmptyPlaces(int transitionId)
-        {
-            return InhibitorsIntoTransition(transitionId).All(ia => Markings[ia.Source] == 0);
-        }
 
-        bool AllInArcPlacesHaveMoreTokensThanTheArcWeight(int transitionId)
-        {
-            var arcs = NonInhibitorsIntoTransition(transitionId);
-            var result = arcs.All(ia => Markings[ia.Source] >= ia.Weight);
-            return result;
-        }
 
-        bool IsEmptyTransition(int transitionId)
+        public override bool IsEmptyTransition(int transitionId)
         {
             return (!InArcs.ContainsKey(transitionId) || InArcs[transitionId].Count == 0);
         }
 
-        public bool IsEnabled(int transitionId)
-        {
-            var a = IsEmptyTransition(transitionId);
-            var b = AllInhibitorsAreFromEmptyPlaces(transitionId);
-            var c = AllInArcPlacesHaveMoreTokensThanTheArcWeight(transitionId);
-            // if all inhibitors are empty and all non inhibitors have as many tokens in their origin place as their weight
-            return (a || (b && c));
-        }
 
-        public void SetMarking(int placeId, int marking)
+        public void SetMarking(Marking m, int placeId, int marking)
         {
-            if (marking < 0)
+            if (m.MinimumIndex() > marking || marking > m.MaximumIndex())
             {
                 throw new ArgumentOutOfRangeException("marking");
             }
 
-            Markings[placeId] = marking;
+            m[placeId] = marking;
         }
 
-        public virtual void Fire()
+        public virtual Marking Fire(Marking m)
         {
             // pick a transition to fire at random
-            var enabledTransitions = AllEnabledTransitions();
+            var enabledTransitions = AllEnabledTransitions(m);
             var count = enabledTransitions.Count();
-
+            var result = new Marking(m);
             if (count == 0)
-                return; // perhaps we should thrown an exception here?
+                return result; // perhaps we should thrown an exception here?
 
             var r = new Random();
             var tran = enabledTransitions.ElementAt(r.Next(count));
 
             foreach (var place in GetInArcs(tran).Where(x => x.IsInhibitor == false))
-                Markings[place.Source] = Markings.SafeGet(place.Source) - 1;
+                result[place.Source] = m[place.Source] - 1;
 
             foreach (var arc in GetOutArcs(tran))
-                Markings[arc.Target] = Markings.SafeGet(arc.Target) + arc.Weight;
+                result[arc.Target] = result[arc.Target] + arc.Weight;
 
             if (TransitionFunctions.ContainsKey(tran))
                 TransitionFunctions[tran].ForEach(a => a(tran));
+            return result;
         }
         #endregion
 
@@ -426,7 +374,6 @@ namespace PetriNetCore
             Contract.Invariant(!string.IsNullOrEmpty(Id), "No empty petri net ID");
             Contract.Invariant(Places != null, "no null places");
             Contract.Invariant(Transitions != null, "no null transitions");
-            Contract.Invariant(Markings != null, "no null markings");
             Contract.Invariant(InArcs != null, "no null InArcs");
             Contract.Invariant(OutArcs != null, "no null OutArcs");
             Contract.Invariant(PlaceOutArcs != null, "no null PlaceOutArcs");
@@ -435,9 +382,9 @@ namespace PetriNetCore
 #endif
 
 
-        public int? GetNextTransitionToFire()
+        public int? GetNextTransitionToFire(Marking m)
         {
-            var ets = AllEnabledTransitions();
+            var ets = AllEnabledTransitions(m);
             return (from t in ets
                     orderby GetTransitionPriority(t) descending
                     select t).FirstOrDefault();
@@ -446,6 +393,27 @@ namespace PetriNetCore
         public int GetTransitionPriority(int t)
         {
             return TransitionPriorities.ContainsKey(t) ? TransitionPriorities[t] : 0;
+        }
+        public override IEnumerable<int> GetPlaceOutArcs(int placeId)
+        {
+            if (PlaceOutArcs.ContainsKey(placeId))
+            {
+                return PlaceOutArcs[placeId].Select(x => x.Target);
+            }
+            return new int[] { };
+        }
+        public override int GetWeight(int placeid, int transid)
+        {
+            if (!PlaceOutArcs.ContainsKey(placeid))
+            {
+                throw new ArgumentException("no transition from place to transition");
+            }
+            var outArc = PlaceOutArcs[placeid].Where(x => x.Target == transid).FirstOrDefault();
+            if (outArc != null)
+            {
+                return outArc.Weight;
+            }
+            throw new ArgumentException("no transition from place to transition");
         }
     }
 

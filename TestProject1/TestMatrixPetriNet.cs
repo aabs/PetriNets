@@ -56,10 +56,12 @@ namespace TestProject1
         public void TestSetMarkingAffectsEnablementszx()
         {
             var p = TestClass2.CreatePNTwoInOneOut();
-
-            Assert.AreEqual(true, p.IsEnabled(0));
-            p.SetMarking(0, 0);
-            Assert.AreEqual(false, p.IsEnabled(0));
+            var m = new Marking(3, new Dictionary<int,int>(){
+                {0,1}, {1,1}, {2,0}
+            });
+            Assert.AreEqual(true, p.IsEnabled(0, m));
+            p.SetMarking(m, 0, 0);
+            Assert.AreEqual(false, p.IsEnabled(0, m));
         }
 
         [TestMethod]
@@ -322,6 +324,7 @@ namespace TestProject1
         {
             var path = @"C:\shared.datastore\repository\personal\dev\prototypes\Automata\PetriNet\pnml.ex1.xml";
             var pnSeq = PnmlModelLoader.Load(path).ToList();
+            var markings = PnmlModelLoader.LoadMarkings(path, pnSeq).ToList();
             Assert.IsNotNull(pnSeq);
             Assert.AreEqual(2, pnSeq.Count());
             Assert.AreEqual("n2", pnSeq.ElementAt(0).Id);
@@ -332,8 +335,8 @@ namespace TestProject1
             Assert.AreEqual(1, pn1.PlaceOutArcs.Count);
             Assert.AreEqual(1, pn1.InArcs.Count);
             Assert.AreEqual(1, pn1.OutArcs.Count);
-            Assert.AreEqual(1, pn1.Markings.Count);
-            pn1.Fire();
+            Assert.AreEqual(2, markings.Count);
+            pn1.Fire(markings.First().Value);
         }
 
         [TestMethod]

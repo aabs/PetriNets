@@ -14,19 +14,24 @@ namespace Tests
         public void TestSolution3()
         {
             var pn = CreateTestNet();
-            AssertMarkings(pn, new Dictionary<int, int> { { 0, 1 }, { 1, 0 }, { 2, 1 }, { 3, 0 }, { 4, 0 }, { 5, 0 }, { 6, 0 } });
-            pn.Fire();
-            AssertMarkings(pn, new Dictionary<int, int> { { 0, 1 }, { 1, 0 }, { 2, 1 }, { 3, 0 }, { 4, 0 }, { 5, 0 }, { 6, 0 } });
-            pn.SetMarking(4, 1);
-            pn.Fire();
-            AssertMarkings(pn, new Dictionary<int, int> { { 0, 1 }, { 1, 0 }, { 2, 1 }, { 3, 0 }, { 4, 0 }, { 5, 1 }, { 6, 1 } });
+            var m = new Marking(pn.AllPlaces().Count(),
+                new Dictionary<int, int> { { 0, 1 }, { 1, 0 }, { 2, 1 }, { 3, 0 }, { 4, 0 }, { 5, 0 }, { 6, 0 } });
+            AssertMarkings(m, new Dictionary<int, int> { { 0, 1 }, { 1, 0 }, { 2, 1 }, { 3, 0 }, { 4, 0 }, { 5, 0 }, { 6, 0 } });
+            var m2 = pn.Fire(m);
+            AssertMarkings(m2, new Dictionary<int, int> { { 0, 1 }, { 1, 0 }, { 2, 1 }, { 3, 0 }, { 4, 0 }, { 5, 0 }, { 6, 0 } });
+            m2[4] = 1;
+            var m3 = pn.Fire(m2);
+            AssertMarkings(m3, new Dictionary<int, int> { { 0, 1 }, { 1, 0 }, { 2, 1 }, { 3, 0 }, { 4, 0 }, { 5, 1 }, { 6, 1 } });
         }
 
+        public static Marking CreateMarking7()
+        {
+            return new Marking(7, new Dictionary<int, int> { { 0, 1 }, { 1, 0 }, { 2, 1 }, { 3, 0 }, { 4, 0 }, { 5, 0 }, { 6, 0 } });
+        }
         public GraphPetriNet CreateTestNet()
         {
             var pn = new GraphPetriNet("p",
                 new Dictionary<int, string> { { 0, "s1" }, { 1, "s2" }, { 2, "s3" }, { 3, "s4" }, { 4, "pi" }, { 5, "pi1" }, { 6, "pi2" } },
-                new Dictionary<int, int> { { 0, 1 }, { 1, 0 }, { 2, 1 }, { 3, 0 }, { 4, 0 }, { 5, 0 }, { 6, 0 } },
                 new Dictionary<int, string> { { 0, "t1" }, { 1, "t2" }, { 2, "ti" }, { 3, "te1" }, { 4, "te2" } },
                 new Dictionary<int, List<InArc>>
                 {
