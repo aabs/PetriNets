@@ -10,6 +10,7 @@ namespace PetriNetCore
     public class Marking : SparseVector 
     {
         public Marking(int size):base(size){}
+        public Marking(SparseVector vec):base(vec){}
         public Marking(int size, IDictionary<int, int> markings):base(size)
         {
             Debug.Assert(markings.Keys.Max() < size);

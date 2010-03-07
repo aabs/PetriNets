@@ -449,18 +449,18 @@ namespace TestProject1
         [TestMethod]
         public void TestFireConflictingTransitions()
         {
+            var m = new Marking(3,                new Dictionary<int, int> 
+                    { 
+                        { 0, 1 } ,
+                        { 2, 0 } ,
+                        { 1, 0 } 
+                    });
             var p = new MatrixPetriNet("p",
                 new Dictionary<int, string> {
                     {0, "p0"},
                     {1, "p1"},
                     {2, "p2"}
                 },
-                new Dictionary<int, int> 
-                    { 
-                        { 0, 1 } ,
-                        { 2, 0 } ,
-                        { 1, 0 } 
-                    },
                 new Dictionary<int, string> 
                     { 
                         { 0, "t1" }
@@ -472,9 +472,9 @@ namespace TestProject1
                     {0, new List<OutArc>(){new OutArc(1)}}
                 });
 
-            Assert.AreEqual(false, p.IsEnabled(0));
-            p.SetMarking(2, 1);
-            Assert.AreEqual(true, p.IsEnabled(0));
+            Assert.AreEqual(false, p.IsEnabled(0,m));
+            m[2] = 1;
+            Assert.AreEqual(true, p.IsEnabled(0,m));
         }
 
         [TestMethod]

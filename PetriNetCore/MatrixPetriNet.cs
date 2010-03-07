@@ -17,7 +17,7 @@ namespace PetriNetCore
     /// <summary>
     /// Description of MatrixPetriNet.
     /// </summary>
-    public class MatrixPetriNet
+    public class MatrixPetriNet : PetriNetBase, IPetriNet
     {
         #region ctors
         /// <summary>
@@ -38,12 +38,11 @@ namespace PetriNetCore
         [ContractVerification(false)]
         public MatrixPetriNet(string id,
             Dictionary<int, string> placeNames,
-            Dictionary<int, int> markings,
             Dictionary<int, string> transitionNames,
             Dictionary<int, List<InArc>> inArcs,
             Dictionary<int, List<OutArc>> outArcs,
             Dictionary<int, int> transitionOrdering)
-            : this(id, placeNames, markings, transitionNames, inArcs, outArcs)
+            : this(id, placeNames, transitionNames, inArcs, outArcs)
         {
             var x = transitionNames.Select(t => t.Key).Except(transitionOrdering.Select(t => t.Key));
             var y = transitionOrdering.Union(x.ToDictionary(t => t, t => 0)); // baseline priority level
@@ -68,7 +67,6 @@ namespace PetriNetCore
         [ContractVerification(false)]
         public MatrixPetriNet(string id,
             Dictionary<int, string> placeNames,
-            Dictionary<int, int> markings,
             Dictionary<int, string> transitionNames,
             Dictionary<int, List<InArc>> inArcs,
             Dictionary<int, List<OutArc>> outArcs
@@ -77,8 +75,6 @@ namespace PetriNetCore
             Contract.Requires(!string.IsNullOrEmpty(id), "must provide valid PN ID");
             Contract.Requires(placeNames != null, "must provide a set of place names");
             Contract.Requires(placeNames.Count > 0, "places must be non-empty");
-            Contract.Requires(markings != null, "must provide an initial marking");
-            Contract.Requires(markings.Count > 0, "some markings must be provided");
             Contract.Requires(transitionNames != null, "must provide a set of transition names");
             Contract.Requires(transitionNames.Count > 0, "there must be at lerast one transition");
             Contract.Requires(inArcs != null, "inArcs cannot be null");
@@ -99,8 +95,6 @@ namespace PetriNetCore
             OutMatrix = new SparseMatrix(placeNames.Count, transitionNames.Count);
             Places = placeNames;
             Transitions = transitionNames;
-            Markings = new SparseVector(markings.Count);
-            markings.Foreach(x => Markings[x.Key] = x.Value);
             inArcs.Foreach(x => x.Value.Foreach(y => InMatrix[y.Source, x.Key] = y.Weight));
             outArcs.Foreach(x => x.Value.Foreach(y => OutMatrix[y.Target, x.Key] = y.Weight));
         }
@@ -122,7 +116,6 @@ namespace PetriNetCore
         public SparseMatrix OutMatrix { get; set; }
         public SparseMatrix FlowMatrix { get; set; }
         public Dictionary<int, int> TransitionPriorities = new Dictionary<int, int>();
-        public SparseVector Markings { get; set; }
         public Dictionary<int, string> Places = new Dictionary<int, string>();
         public Dictionary<int, string> Transitions = new Dictionary<int, string>();
         public Dictionary<int, List<Action<int>>> TransitionFunctions = new Dictionary<int, List<Action<int>>>();
@@ -150,14 +143,9 @@ namespace PetriNetCore
         #endregion
 
         #region accessors
-        //[Pure]
-        public int GetMarking(int placeId)
+        public override int GetWeight(int placeid, int transid)
         {
-            Contract.Requires(Places.ContainsKey(placeId));
-            Contract.Ensures(Contract.OldValue(Markings).Equals(Markings));
-            Contract.Ensures(Contract.Result<int>() >= 0);
-
-            return (int)Markings[placeId];
+            return (int)InMatrix[placeid, transid];
         }
 
         //[Pure]
@@ -166,11 +154,11 @@ namespace PetriNetCore
             Contract.Requires(Places.ContainsKey(placeId));
             Contract.Requires(Transitions.ContainsKey(transitionId));
 
-            return InMatrix[placeId, transitionId] == double.MaxValue;
+            return InMatrix[placeId, transitionId] == double.NaN;
         }
 
         //[Pure]
-        internal IEnumerable<int> InhibitorsIntoTransition(int transitionId)
+        public override IEnumerable<int> InhibitorsIntoTransition(int transitionId)
         {
             Contract.Requires(Transitions.ContainsKey(transitionId));
 
@@ -182,7 +170,7 @@ namespace PetriNetCore
         }
 
         //[Pure]
-        internal IEnumerable<int> NonInhibitorsIntoTransition(int transitionId)
+        public override IEnumerable<int> NonInhibitorsIntoTransition(int transitionId)
         {
             Contract.Requires(Transitions.ContainsKey(transitionId));
 
@@ -211,77 +199,52 @@ namespace PetriNetCore
         #endregion
 
         #region net execution
-        bool AllInhibitorsAreFromEmptyPlaces(int transitionId)
+        bool AllInhibitorsAreFromEmptyPlaces(int transitionId, Marking m)
         {
             Contract.Requires(Transitions.ContainsKey(transitionId));
 
-            return InhibitorsIntoTransition(transitionId).All(ia => Markings[ia] == 0);
+            return InhibitorsIntoTransition(transitionId).All(ia => m[ia] == 0);
         }
 
-        bool AllInArcPlacesHaveMoreTokensThanTheArcWeight(int transitionId)
+        bool AllInArcPlacesHaveMoreTokensThanTheArcWeight(int transitionId, Marking m)
         {
             Contract.Requires(Transitions.ContainsKey(transitionId));
 
             var arcs = NonInhibitorsIntoTransition(transitionId);
-            var result = arcs.All(ia => Markings[ia] >= InMatrix[ia, transitionId]);
+            var result = arcs.All(ia => m[ia] >= InMatrix[ia, transitionId]);
             return result;
         }
 
-        bool IsEmptyTransition(int transitionId)
+        public override bool IsEmptyTransition(int transitionId)
         {
             Contract.Requires(Transitions.ContainsKey(transitionId));
 
             return InMatrix.GetColumn(transitionId).Sum() == 0;
         }
 
-        public bool IsEnabled(int transitionId)
-        {
-            Contract.Requires(Transitions.ContainsKey(transitionId));
-
-            var a = IsEmptyTransition(transitionId);
-            var b = AllInhibitorsAreFromEmptyPlaces(transitionId);
-            var c = AllInArcPlacesHaveMoreTokensThanTheArcWeight(transitionId);
-            // if all inhibitors are empty and all non inhibitors have as many tokens in their origin place as their weight
-            return (a || (b && c));
-        }
-
-        public void SetMarking(int placeId, int marking)
-        {
-            Contract.Requires(Places.ContainsKey(placeId));
-            Contract.Requires(marking >= 0);
-            Contract.Ensures(Markings[placeId] == marking);
-
-            if (marking < 0)
-            {
-                throw new ArgumentOutOfRangeException("marking");
-            }
-
-            Markings[placeId] = marking;
-        }
-
-        public IEnumerable<int> GetEnabledTransitions()
+        public IEnumerable<int> GetEnabledTransitions(Marking m)
         {
             // subtract the weights from the markings then sum each element in the resulting vectir
             // if the result is greater than or equal to zero then the transition is enabled
             for (int i = 0; i < OutMatrix.Columns; i++)
             {
-                if (IsEnabled(i))
+                if (IsEnabled(i,m))
                     yield return i;
             }
         }
 
-        SparseVector CreateFiringPlan()
+        SparseVector CreateFiringPlan(Marking m)
         {
             SparseVector result = new SparseVector(Transitions.Count);
-            if (IsConflicted())
+            if (IsConflicted(m))
             {
-                var next = GetNextTransitionToFire();
+                var next = GetNextTransitionToFire(m);
                 if (next.HasValue)
                     result[next.Value] = 1.0;
             }
             else
             {
-                foreach (var transId in GetEnabledTransitions())
+                foreach (var transId in GetEnabledTransitions(m))
                 {
                     result[transId] = 1;
                 }
@@ -289,24 +252,25 @@ namespace PetriNetCore
             return result;
         }
 
-        public int? GetNextTransitionToFire()
+        public int? GetNextTransitionToFire(Marking m)
         {
-            var ets = GetEnabledTransitions();
+            var ets = GetEnabledTransitions(m);
             return (from t in ets
                     orderby GetTransitionPriority(t) descending
                     select t).FirstOrDefault();
         }
 
-        public virtual void Fire()
+        public virtual Marking Fire(Marking m)
         {
-            var firingTransitions = GetEnabledTransitions().ToList(); // no laziness here, since enabled trans will change after the flow equation has been evaluated
-            Markings = Markings + (OutMatrix - InMatrix) * CreateFiringPlan();
+            var firingTransitions = GetEnabledTransitions(m).ToList(); // no laziness here, since enabled trans will change after the flow equation has been evaluated
+            var result = new Marking(m + (OutMatrix - InMatrix) * CreateFiringPlan(m));
 
             foreach (var transId in firingTransitions)
             {
                 if (TransitionFunctions.ContainsKey(transId))
                     TransitionFunctions[transId].ForEach(a => a(transId));
             }
+            return result;
         }
         #endregion
         [ContractInvariantMethod]
@@ -314,7 +278,6 @@ namespace PetriNetCore
         {
             Contract.Invariant(Places != null, "Places can never be null");
             Contract.Invariant(Transitions != null, "Transitions must never be null");
-            Contract.Invariant(Markings != null, "Markings must never be null");
             Contract.Invariant(!string.IsNullOrEmpty(Id), "the petri net must have a valid ID");
             Contract.Invariant(InMatrix != null, "the in matrix must be a valid matrix");
             Contract.Invariant(InMatrix.Columns == Transitions.Count, "in matrix is the wrong width");
@@ -328,25 +291,7 @@ namespace PetriNetCore
         {
             return TransitionPriorities.ContainsKey(t) ? TransitionPriorities[t] : 0;
         }
-        public bool IsConflicted()
-        {
-            return AllPlaces().Any(pid => PlaceIsConflicted(pid));
-        }
-        public bool PlaceIsConflicted(int placeId)
-        {
-            return GetEnabledTransitionsAdjacentToPlace(placeId).Count() > 1;
-        }
-
-        public IEnumerable<int> GetEnabledTransitionsAdjacentToPlace(int placeId)
-        {
-
-            var q = (from transId in GetPlaceOutArcs(placeId)
-                     where IsEnabled(transId)
-                     select transId).ToArray();
-            return q;
-        }
-
-        IEnumerable<int> GetPlaceOutArcs(int placeId)
+        public override IEnumerable<int> GetPlaceOutArcs(int placeId)
         {
             foreach (var item in InMatrix.GetRow(placeId).GetIndexedEnumerator())
             {
@@ -355,7 +300,7 @@ namespace PetriNetCore
             }
         }
 
-        private IEnumerable<int> AllPlaces()
+        public override IEnumerable<int> AllPlaces()
         {
             return Places.Count() > 0 ? Places.Keys.AsEnumerable() : new int[] { };
         }
