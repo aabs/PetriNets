@@ -343,17 +343,34 @@ namespace PetriNetCore
             m[placeId] = marking;
         }
 
+        /// <summary>
+        /// invokes the first enabled transition in the petri net under the supplied <see cref="Marking"/>.
+        /// </summary>
+        /// <param name="m">The marking under which transition activation is calculated.</param>
+        /// <returns>A new <see cref="Marking"/> containing the result of transition firing on the marking.</returns>
+        /// <remarks>
+        /// This method will not have any side effects on the <see cref="Marking"/> passed into the function or on the net itself.
+        /// 
+        /// This method works by choosing the next transition to fire randomly.
+        /// </remarks>
         public virtual Marking Fire(Marking m)
         {
-            // pick a transition to fire at random
+            var result = new Marking(m);
+            int? transitionId = GetNextTransitionToFire(m);
+            if (!transitionId.HasValue)
+            {
+                return result;
+            }
+            int tran = transitionId.Value;
+/*
             var enabledTransitions = AllEnabledTransitions(m);
             var count = enabledTransitions.Count();
-            var result = new Marking(m);
             if (count == 0)
                 return result; // perhaps we should thrown an exception here?
 
             var r = new Random();
             var tran = enabledTransitions.ElementAt(r.Next(count));
+*/
 
             foreach (var place in GetInArcs(tran).Where(x => x.IsInhibitor == false))
                 result[place.Source] = m[place.Source] - 1;
@@ -385,9 +402,13 @@ namespace PetriNetCore
         public int? GetNextTransitionToFire(Marking m)
         {
             var ets = AllEnabledTransitions(m);
+            if (ets.Count()< 1)
+            {
+                return null;
+            }
             return (from t in ets
                     orderby GetTransitionPriority(t) descending
-                    select t).FirstOrDefault();
+                    select t).First();
         }
 
         public int GetTransitionPriority(int t)

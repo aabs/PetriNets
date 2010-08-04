@@ -84,10 +84,6 @@ namespace Tests
                 { 1, 1 },
                 { 2, 0 } });
             var p = CreatePNInhibited();
-            AssertMarkings(m, new Dictionary<int, int>{ 
-                { 0, 1 }, 
-                { 1, 1 },
-                { 2, 0 } });
             m = p.Fire(m);
             AssertMarkings(m, new Dictionary<int, int>{ 
                 { 0, 1 }, 
@@ -98,13 +94,8 @@ namespace Tests
         [TestMethod]
         public void TestInhibition2()
         {
-            var m = new Marking(3, new Dictionary<int, int> { { 0, 1 }, { 1, 1 } });
+            var m = new Marking(3, new Dictionary<int, int> { { 0, 1 }, { 1, 0 } });
             var p = CreatePNInhibited();
-            m[1] = 0;
-            AssertMarkings(m, new Dictionary<int, int>{ 
-                { 0, 1 }, 
-                { 1, 0 },
-                { 2, 0 } });
             m = p.Fire(m);
             AssertMarkings(m, new Dictionary<int, int>{ 
                 { 0, 0 }, 

@@ -65,12 +65,15 @@ namespace PetriNetCore
             var b = AllInhibitorsAreFromEmptyPlaces(transitionId, m);
             var c = AllInArcPlacesHaveMoreTokensThanTheArcWeight(transitionId, m);
             // if all inhibitors are empty and all non inhibitors have as many tokens in their origin place as their weight
-            return (a || (b && c));
+            bool result = (a || (b && c));
+            return result;
         }
         bool AllInhibitorsAreFromEmptyPlaces(int transitionId, Marking m)
         {
-            return InhibitorsIntoTransition(transitionId).All(placeid => m[placeid] == 0);
+            var inhibitorsIntoTransition = InhibitorsIntoTransition(transitionId);
+            return inhibitorsIntoTransition.All(placeid => m[placeid] == 0);
         }
+
         bool AllInArcPlacesHaveMoreTokensThanTheArcWeight(int transitionId, Marking m)
         {
             var arcs = NonInhibitorsIntoTransition(transitionId);
