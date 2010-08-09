@@ -2,35 +2,10 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
-using dnAnalytics.LinearAlgebra;
 using System.Diagnostics;
 
 namespace PetriNetCore
 {
-    public class Marking : SparseVector 
-    {
-        public Marking(int size):base(size){}
-        public Marking(SparseVector vec):base(vec){}
-        public Marking(int size, IDictionary<int, int> markings):base(size)
-        {
-            Debug.Assert(markings.Keys.Max() < size);
-            Debug.Assert(markings.Keys.Min() >= 0);
-            markings.Foreach(x => { this[x.Key] = x.Value; });
-        }
-        public Marking(Marking m) : base(m) { }
-    }
-
-    public interface IPetriNet
-    {
-        Marking CreateInitialMarking();
-        IEnumerable<int> AllPlaces();
-        IEnumerable<int> InhibitorsIntoTransition(int transitionId);
-        IEnumerable<int> NonInhibitorsIntoTransition(int transitionId);
-        int GetWeight(int placeid, int transid);
-        IEnumerable<int> GetPlaceOutArcs(int placeId);
-        bool IsEmptyTransition(int transitionId);
-    }
-
     public abstract class PetriNetBase
     {
         public abstract IEnumerable<int> AllPlaces();

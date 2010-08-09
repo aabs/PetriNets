@@ -132,6 +132,8 @@ namespace PetriNetCore
         #region graph model and state data
         public string Id { get; set; }
 
+        public const int MaxSize = 1000;
+
         public Dictionary<int, string> Places = new Dictionary<int, string>();
         public Dictionary<int, string> Transitions = new Dictionary<int, string>();
 

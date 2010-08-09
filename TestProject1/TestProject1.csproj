@@ -69,9 +69,12 @@
     <Compile Include="test1.cs" />
     <Compile Include="Test2.cs" />
     <Compile Include="Test3.cs" />
+    <Compile Include="TestClass2.cs" />
+    <Compile Include="TestMarkings.cs" />
     <Compile Include="TestMarkovRecorder.cs" />
     <Compile Include="GeneralPetriExerciseTests.cs" />
     <Compile Include="TestMatrixPetriNet.cs" />
+    <Compile Include="TestPetriNetCreator.cs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\PetriNetCore\PetriNetCore.csproj">
