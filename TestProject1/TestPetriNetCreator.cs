@@ -211,10 +211,10 @@ namespace TestProject1
                 .WithPlaces("p1", "p2", "p3")
                 .AndTransitions("t1", "t2", "t3")
 
-                .With("p1", "p2").FedByTransition("t1")
-                .And().With("p3").FedByTransition("t2").AsInhibitor()
-                .And().With("t1").FeedingPlaces("p2")
-                .And().With("t2").FeedingPlaces("p1")
+                .With("t1").FedBy("p1", "p2")
+                .And().With("t2").FedBy("p3").AsInhibitor()
+                .And().With("t1").Feeding("p2")
+                .And().With("t2").Feeding("p1")
 
                 .And().WhenFiring("t1")
                     .Run(x => Console.WriteLine("Fired"))
@@ -259,24 +259,28 @@ namespace TestProject1
                     {(int)Transitions.t1, new List<OutArc>(){new OutArc((int)Places.p2),
                                                              new OutArc((int)Places.p3)}}
                 });
-            var p2 = CreatePetriNet.Called("p")
-                .WithPlaces("p1", "p2", "p3")
+            
+            var pnc = CreatePetriNet.Called("p")
+                .WithPlaces("p1",
+                            "p2",
+                            "p3")
                 .AndTransitions("t1")
-                .With("p1").FedByTransition("t1")
-                .And().With("t1").FeedingPlaces("p2", "p3")
-            AssertMarkings(m, new Dictionary<int, double>{ 
-                { (int)Places.p1, 0 }, 
-                { (int)Places.p2, 0 },
-                { (int)Places.p3, 0 } });
+                .With("t1").FedBy("p1")
+                .And().With("t1").Feeding("p2",
+                                          "p3")
+                .Done();
+            var p2 = pnc.CreateNet();
 
             m[(int)Places.p1] = 1;
-            AssertMarkings(m, new Dictionary<int, double>{ 
-                { (int)Places.p1, 1 }, 
-                { (int)Places.p2, 0 },
-                { (int)Places.p3, 0 } });
+            
+            var m2 = p.Fire(m);
+            var m3 = p2.Fire(m);
 
-            m = p.Fire(m);
-            AssertMarkings(m, new Dictionary<int, double>{ 
+            AssertMarkings(m2, new Dictionary<int, double>{ 
+                { (int)Places.p1, 0 }, 
+                { (int)Places.p2, 1 },
+                { (int)Places.p3, 1 } });
+            AssertMarkings(m3, new Dictionary<int, double>{ 
                 { (int)Places.p1, 0 }, 
                 { (int)Places.p2, 1 },
                 { (int)Places.p3, 1 } });

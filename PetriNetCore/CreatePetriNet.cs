@@ -9,25 +9,25 @@ namespace PetriNetCore
         public CreatePetriNet Builder { get; set; }
 
         public PetriNetConnectionBuilder(CreatePetriNet builder,
-                                         string[] args)
+                                         string transition)
         {
             Builder = builder;
-            Args = args;
+            TransitionName = transition;
         }
 
-        public string Target { get; set; }
+        public string TransitionName { get; set; }
         public string[] Args { get; set; }
         protected bool IsIntoTransition { get; set; } // i.e. are they InArcs, or OutArcs
         protected bool CreateInhibitors { get; set; }
 
-        public PetriNetConnectionBuilder FedByTransition(string transitionName)
+        public PetriNetConnectionBuilder FedBy(params string[] placeNames)
         {
-            Target = transitionName;
+            Args = placeNames;
             IsIntoTransition = true;
             return this;
         }
 
-        public PetriNetConnectionBuilder FeedingPlaces(params string[] placeNames)
+        public PetriNetConnectionBuilder Feeding(params string[] placeNames)
         {
             Args = placeNames;
             IsIntoTransition = false;
@@ -40,17 +40,22 @@ namespace PetriNetCore
             return this;
         }
 
+        public CreatePetriNet Done()
+        {
+            return And();
+        }
+
         public CreatePetriNet And()
         {
             foreach (var arg in Args)
             {
                 if (IsIntoTransition)
                 {
-                    Builder.AddInArc(from:arg, to:Target, isInhibitor:CreateInhibitors);
+                    Builder.AddInArc(placeName:arg, transitionName:TransitionName, isInhibitor:CreateInhibitors);
                 }
                 else
                 {
-                    Builder.AddOutArc(to:Target, from:arg);
+                    Builder.AddOutArc(TransitionName, arg);
                 }
             }
             return Builder;
@@ -178,9 +183,9 @@ namespace PetriNetCore
             return this;
         }
         public CreatePetriNet AndTransitions(params string[] transitionNames) { return WithTransitions(transitionNames); }
-        public PetriNetConnectionBuilder With(params string[] placeNames)
+        public PetriNetConnectionBuilder With(string transitionName)
         {
-            var result = new PetriNetConnectionBuilder(this, placeNames);
+            var result = new PetriNetConnectionBuilder(this, transitionName);
             return result;
         }
 
@@ -213,16 +218,16 @@ namespace PetriNetCore
         {
             return Places.Where(pair => pair.Value == name).Select(valuePair => valuePair.Key).First();
         }
-        public void AddInArc(string @from,
-                             string to,
+        public void AddInArc(string placeName,
+                             string transitionName,
                              bool isInhibitor)
         {
             if (InArcs == null)
             {
                 InArcs = new Dictionary<int, List<InArc>>();
             }
-            int fromIndex = PlaceIndex(@from);
-            int toIndex = TransitionIndex(to);
+            int fromIndex = PlaceIndex(placeName);
+            int toIndex = TransitionIndex(transitionName);
 
             if (!InArcs.ContainsKey(fromIndex))
             {
@@ -231,14 +236,14 @@ namespace PetriNetCore
             InArcs[fromIndex].Add(new InArc(toIndex, isInhibitor));
         }
 
-        public void AddOutArc(string @from, string to)
+        public void AddOutArc(string transitionName, string placeName)
         {
             if (OutArcs == null)
             {
                 OutArcs = new Dictionary<int, List<OutArc>>();
             }
-            int fromIndex = TransitionIndex(@from); 
-            int toIndex = PlaceIndex(to);
+            int fromIndex = TransitionIndex(transitionName); 
+            int toIndex = PlaceIndex(placeName);
             if (!OutArcs.ContainsKey(fromIndex))
             {
                 OutArcs[fromIndex] = new List<OutArc>();
