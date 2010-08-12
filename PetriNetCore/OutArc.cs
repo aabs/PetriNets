@@ -7,6 +7,11 @@
         {
             Target = target;
         }
+        public OutArc(int target, int weight)
+            : base(weight)
+        {
+            Target = target;
+        }
         public int Target { get; set; }
     }
 }

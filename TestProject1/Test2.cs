@@ -8,15 +8,15 @@
  */
 
 using System;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
+using NUnit.Framework;
 using dnAnalytics.LinearAlgebra;
 
 namespace Tests
 {
-	[TestClass]
+	[TestFixture]
 	public class Test2
 	{
-		[TestMethod]
+		[Test]
 		public void Test()
 		{
 			SparseMatrix sm = new SparseMatrix(200);

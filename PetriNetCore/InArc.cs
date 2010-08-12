@@ -2,13 +2,8 @@
 {
     public class InArc : Arc
     {
-        public InArc(int source)
-            : base(1)
-        {
-            Source = source;
-        }
-        public InArc(int source, bool inhibitor)
-            : base(1)
+        public InArc(int source, int weight = 1, bool inhibitor = false)
+            : base(weight)
         {
             Source = source;
             IsInhibitor = inhibitor;

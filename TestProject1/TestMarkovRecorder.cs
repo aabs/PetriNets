@@ -10,15 +10,15 @@
 using System;
 using System.Linq;
 using System.Diagnostics;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
+using NUnit.Framework;
 using PetriNetCore;
 
 namespace Tests
 {
-	[TestClass]
+	[TestFixture]
 	public class TestMarkovRecorder
 	{
-		[TestMethod]
+		[Test]
 		public void Test()
 		{
 			MarkovModelRecorder recorder = new MarkovModelRecorder(10);
@@ -29,7 +29,7 @@ namespace Tests
 			Assert.AreEqual(2, recorder.Occurences[7,1]);
 		}
 		
-		[TestMethod]
+		[Test]
 		public void Test2()
 		{
 			MarkovModelRecorder recorder = new MarkovModelRecorder(10);
@@ -43,7 +43,7 @@ namespace Tests
 			}
 		}
 		
-		[TestMethod]
+		[Test]
 		public void Test3()
 		{
 			MarkovModelRecorder recorder = new MarkovModelRecorder(10);

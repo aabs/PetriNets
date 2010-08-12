@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Text;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
+using NUnit.Framework;
 using PetriNetCore;
 
 namespace PetriNetCore
@@ -9,11 +9,11 @@ namespace PetriNetCore
 }
 namespace TestProject1
 {
-    [TestClass]
+    [TestFixture]
     public class TestPetriNetCreator
     {
         #region test create petri net builder
-        [TestMethod]
+        [Test]
         public void TestCreatePetriNetBuilder()
         {
             var pn = CreatePetriNet.Called("p1");
@@ -22,7 +22,7 @@ namespace TestProject1
         #endregion
 
         #region test name
-        [TestMethod]
+        [Test]
         public void TestNameIsInitialised()
         {
             var pn = CreatePetriNet.Called("p1");
@@ -31,7 +31,7 @@ namespace TestProject1
         }
 
 
-        [TestMethod, ExpectedException(typeof(ArgumentException))]
+        [Test, ExpectedException(typeof(ArgumentException))]
         public void TestNameCannotBeInitdWithJunk1()
         {
             var pn = CreatePetriNet.Called("");
@@ -40,7 +40,7 @@ namespace TestProject1
         }
 
 
-        [TestMethod, ExpectedException(typeof(ArgumentException))]
+        [Test, ExpectedException(typeof(ArgumentException))]
         public void TestNameCannotBeInitdWithJunk2()
         {
             var pn = CreatePetriNet.Called("\0");
@@ -48,7 +48,7 @@ namespace TestProject1
         #endregion
 
         #region test places
-        [TestMethod]
+        [Test]
         public void TestCreatePlaces()
         {
             var pn = CreatePetriNet.Called("net").WithPlaces("p1", "p2", "p3");
@@ -59,33 +59,33 @@ namespace TestProject1
             Assert.AreEqual(pn.Places[2], "p3");
         }
 
-        [TestMethod, ExpectedException(typeof(ArgumentException))]
+        [Test, ExpectedException(typeof(ArgumentException))]
         public void TestCreateWithBadNames1()
         {
             var pn = CreatePetriNet.Called("net").WithPlaces();
 
         }
 
-        [TestMethod, ExpectedException(typeof(ArgumentException))]
+        [Test, ExpectedException(typeof(ArgumentException))]
         public void TestCreateWithBadNames2()
         {
             var pn = CreatePetriNet.Called("net").WithPlaces(null);
 
         }
 
-        [TestMethod, ExpectedException(typeof(ArgumentException))]
+        [Test, ExpectedException(typeof(ArgumentException))]
         public void TestCreateWithBadNames3()
         {
             var pn = CreatePetriNet.Called("net").WithPlaces("p1", "", "p2");
         }
 
-        [TestMethod, ExpectedException(typeof(ArgumentException))]
+        [Test, ExpectedException(typeof(ArgumentException))]
         public void TestCreateWithBadNames4()
         {
             var pn = CreatePetriNet.Called("net").WithPlaces("p1", null, "p2");
         }
 
-        [TestMethod, ExpectedException(typeof(ArgumentException))]
+        [Test, ExpectedException(typeof(ArgumentException))]
         public void TestCreateWithBadNames5()
         {
             var pn = CreatePetriNet.Called("net").WithPlaces("p1", "\0", "p2");
@@ -93,7 +93,7 @@ namespace TestProject1
         #endregion
 
         #region test transitions
-        [TestMethod]
+        [Test]
         public void TestCreateTransitions()
         {
             var pn = CreatePetriNet
@@ -107,7 +107,7 @@ namespace TestProject1
             Assert.AreEqual(pn.Places[2], "p3");
         }
 
-        [TestMethod, ExpectedException(typeof(ArgumentException))]
+        [Test, ExpectedException(typeof(ArgumentException))]
         public void TestCreateTransitionsWithBadNames1()
         {
             var pn = CreatePetriNet
@@ -116,7 +116,7 @@ namespace TestProject1
 
         }
 
-        [TestMethod, ExpectedException(typeof(ArgumentException))]
+        [Test, ExpectedException(typeof(ArgumentException))]
         public void TestCreateTransitionsWithBadNames2()
         {
             var pn = CreatePetriNet
@@ -125,7 +125,7 @@ namespace TestProject1
 
         }
 
-        [TestMethod, ExpectedException(typeof(ArgumentException))]
+        [Test, ExpectedException(typeof(ArgumentException))]
         public void TestCreateTransitionsWithBadNames3()
         {
             var pn = CreatePetriNet
@@ -133,7 +133,7 @@ namespace TestProject1
                 .WithPlaces("p1", "p2", "p3").WithTransitions("p1", "", "p2");
         }
 
-        [TestMethod, ExpectedException(typeof(ArgumentException))]
+        [Test, ExpectedException(typeof(ArgumentException))]
         public void TestCreateTransitionsWithBadNames4()
         {
             var pn = CreatePetriNet
@@ -141,7 +141,7 @@ namespace TestProject1
                 .WithPlaces("p1", "p2", "p3").WithTransitions("p1", null, "p2");
         }
 
-        [TestMethod, ExpectedException(typeof(ArgumentException))]
+        [Test, ExpectedException(typeof(ArgumentException))]
         public void TestCreateTransitionsWithBadNames5()
         {
             var pn = CreatePetriNet
@@ -152,7 +152,7 @@ namespace TestProject1
 
         #region prevent multiple calls
 
-        [TestMethod, ExpectedException(typeof(ApplicationException))]
+        [Test, ExpectedException(typeof(ApplicationException))]
         public void TestCallPlacesTwice()
         {
             var pn = CreatePetriNet
@@ -162,7 +162,7 @@ namespace TestProject1
                 .WithTransitions("p1");
         }
 
-        [TestMethod, ExpectedException(typeof(ApplicationException))]
+        [Test, ExpectedException(typeof(ApplicationException))]
         public void TestCalltransitionsTwice()
         {
             var pn = CreatePetriNet
@@ -172,7 +172,7 @@ namespace TestProject1
                 .WithTransitions("p1");
         }
 
-        [TestMethod, ExpectedException(typeof(ApplicationException))]
+        [Test, ExpectedException(typeof(ApplicationException))]
         public void TestCallPlacesTwiceOutOfOrder()
         {
             var pn = CreatePetriNet
@@ -182,7 +182,7 @@ namespace TestProject1
                 .WithPlaces("p1");
         }
 
-        [TestMethod, ExpectedException(typeof(ApplicationException))]
+        [Test, ExpectedException(typeof(ApplicationException))]
         public void TestCalltransitionsTwiceOutOfOrder()
         {
             var pn = CreatePetriNet
@@ -203,7 +203,7 @@ namespace TestProject1
             }
         }
 
-        [TestMethod]
+        [Test]
         public void TestFullMontySetup()
         {
             var pnb = CreatePetriNet
@@ -232,7 +232,7 @@ namespace TestProject1
             var m = pnb.CreateMarking();
         }
 
-        [TestMethod]
+        [Test]
         public void TestCompareWithOldConstructionTechnique()
         {
             var m = new Marking(3,

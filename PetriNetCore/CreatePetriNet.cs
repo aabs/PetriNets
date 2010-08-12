@@ -13,12 +13,14 @@ namespace PetriNetCore
         {
             Builder = builder;
             TransitionName = transition;
+            _weight = 1;
         }
 
         public string TransitionName { get; set; }
         public string[] Args { get; set; }
         protected bool IsIntoTransition { get; set; } // i.e. are they InArcs, or OutArcs
         protected bool CreateInhibitors { get; set; }
+        protected int _weight { get; set; }
 
         public PetriNetConnectionBuilder FedBy(params string[] placeNames)
         {
@@ -51,14 +53,20 @@ namespace PetriNetCore
             {
                 if (IsIntoTransition)
                 {
-                    Builder.AddInArc(placeName:arg, transitionName:TransitionName, isInhibitor:CreateInhibitors);
+                    Builder.AddInArc(arg, TransitionName, CreateInhibitors, _weight);
                 }
                 else
                 {
-                    Builder.AddOutArc(TransitionName, arg);
+                    Builder.AddOutArc(TransitionName, arg, _weight);
                 }
             }
             return Builder;
+        }
+
+        internal PetriNetConnectionBuilder Weight(int weight)
+        {
+            _weight = weight;
+            return this;
         }
     }
     public class PetriNetEventBuilder
@@ -210,17 +218,20 @@ namespace PetriNetCore
             var result = new PetriNetEventBuilder(this, transitionName);
             return result;
         }
-        int TransitionIndex(string name)
+
+        public int TransitionIndex(string name)
         {
             return Transitions.Where(pair => pair.Value == name).Select(valuePair => valuePair.Key).First();
         }
-        int PlaceIndex(string name)
+
+        public int PlaceIndex(string name)
         {
             return Places.Where(pair => pair.Value == name).Select(valuePair => valuePair.Key).First();
         }
         public void AddInArc(string placeName,
                              string transitionName,
-                             bool isInhibitor)
+                             bool isInhibitor,
+                             int weight)
         {
             if (InArcs == null)
             {
@@ -233,10 +244,11 @@ namespace PetriNetCore
             {
                 InArcs[fromIndex] = new List<InArc>();
             }
-            InArcs[fromIndex].Add(new InArc(toIndex, isInhibitor));
+            InArcs[fromIndex].Add(new InArc(toIndex, weight, isInhibitor));
         }
 
-        public void AddOutArc(string transitionName, string placeName)
+        public void AddOutArc(string transitionName, string placeName,
+                             int weight = 1)
         {
             if (OutArcs == null)
             {
@@ -248,7 +260,7 @@ namespace PetriNetCore
             {
                 OutArcs[fromIndex] = new List<OutArc>();
             }
-            OutArcs[fromIndex].Add(new OutArc(toIndex));
+            OutArcs[fromIndex].Add(new OutArc(toIndex, weight));
         }
 
         public void AddEvent(string transitionName, Action<GraphPetriNet> task)

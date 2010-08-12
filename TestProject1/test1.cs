@@ -9,12 +9,12 @@
 using System;
 using System.Collections.Generic;
 using PetriNetCore;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
+using NUnit.Framework;
 
 namespace Tests
 {
-    [TestClass]
-    public class TestClass2
+    [TestFixture]
+    public class TestFixture2
     {
     	/*
     	 * Test scenarios
@@ -35,7 +35,7 @@ namespace Tests
     	 * 15. 
     	 * */
     	
-        [TestMethod]
+        [Test]
         public void Test1()
         {
             var m = new Marking(3, new Dictionary<int, int>{ 
@@ -54,7 +54,7 @@ namespace Tests
                 { 2, 1 } });
         }
 
-        [TestMethod]
+        [Test]
         public void Test2()
         {
             var m = new Marking(4, new Dictionary<int, int>{ 
@@ -76,7 +76,7 @@ namespace Tests
                 { 3, 1 } });
         }
 
-        [TestMethod]
+        [Test]
         public void TestInhibition()
         {
             var m = new Marking(3, new Dictionary<int, int>{ 
@@ -91,7 +91,7 @@ namespace Tests
                 { 2, 0 } });
         }
 
-        [TestMethod]
+        [Test]
         public void TestInhibition2()
         {
             var m = new Marking(3, new Dictionary<int, int> { { 0, 1 }, { 1, 0 } });
@@ -103,7 +103,7 @@ namespace Tests
                 { 2, 1 } });
         }
         
-        [TestMethod]
+        [Test]
         public void TestOutgoingWeight()
         {
             var m = new Marking(2, new Dictionary<int, int> { { 0, 1 }, { 1, 0 } });
@@ -142,7 +142,7 @@ namespace Tests
                 //new Dictionary<int, int> { { 0, 1 }, { 1, 1 } },
                 new Dictionary<int, string> { { 0, "t0" } },
                 new Dictionary<int, List<InArc>>(){
-                    {0, new List<InArc>(){new InArc(0),new InArc(1, true)}}
+                    {0, new List<InArc>(){new InArc(0),new InArc(1, 1, true)}}
                 },
                 new Dictionary<int, List<OutArc>>(){
                     {0, new List<OutArc>(){new OutArc(2)}}

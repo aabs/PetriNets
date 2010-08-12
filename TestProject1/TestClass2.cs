@@ -1,15 +1,15 @@
 using System;
 using System.Collections.Generic;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
+using NUnit.Framework;
 using PetriNetCore;
 
 namespace TestProject1
 {
-    [TestClass]
-    public class TestClass2
+    [TestFixture]
+    public class TestFixture2
     {
 
-        [TestMethod]
+        [Test]
         public void TestTest1()
         {
             var p = CreatePNTwoInOneOut();

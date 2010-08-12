@@ -1,17 +1,14 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
+using NUnit.Framework;
 using PetriNetCore;
 
 namespace TestProject1
 {
-    [TestClass]
+    [TestFixture]
     public class TestMarkings
     {
 
-        [TestMethod]
+        [Test]
         public void TestCreateMarking()
         {
             var m = new Marking(1);
@@ -19,37 +16,37 @@ namespace TestProject1
             Assert.AreEqual(0, m[0]); 
         }
 
-        [TestMethod, ExpectedException(typeof(Exception), AllowDerivedTypes = true)]
+        [Test, ExpectedException(typeof(Exception))]
         public void TestCreateMarkingWithInvalidSize()
         {
             var m = new Marking(0);
         }
 
-        [TestMethod, ExpectedException(typeof(Exception), AllowDerivedTypes = true)]
+        [Test, ExpectedException(typeof(Exception))]
         public void TestCreateMarkingWithInvalidSize2()
         {
             var m = new Marking(-1);
         }
 
-        [TestMethod, ExpectedException(typeof(Exception), AllowDerivedTypes = true)]
+        [Test, ExpectedException(typeof(Exception))]
         public void TestCreateMarkingWithInvalidSize3()
         {
             var m = new Marking(int.MinValue);
         }
 
-        [TestMethod, ExpectedException(typeof(Exception), AllowDerivedTypes = true)]
+        [Test, ExpectedException(typeof(Exception))]
         public void TestCreateMarkingWithInvalidSize4()
         {
             var m = new Marking(int.MaxValue);
         }
 
-        [TestMethod, ExpectedException(typeof(Exception), AllowDerivedTypes = true)]
+        [Test, ExpectedException(typeof(Exception))]
         public void TestCreateMarkingWithInvalidSize5()
         {
             var m = new Marking(GraphPetriNet.MaxSize + 1);
         }
 
-        [TestMethod]
+        [Test]
         public void TestCreateMarkingWithMaxSize()
         {
             var m = new Marking(GraphPetriNet.MaxSize);

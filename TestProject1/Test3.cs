@@ -2,15 +2,15 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
+using NUnit.Framework;
 using PetriNetCore;
 
 namespace Tests
 {
-    [TestClass]
+    [TestFixture]
     public class Test3 : BasePNTester
     {
-        [TestMethod]
+        [Test]
         public void TestSolution3()
         {
             var pn = CreateTestNet();

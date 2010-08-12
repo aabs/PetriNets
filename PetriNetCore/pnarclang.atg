@@ -1,0 +1,95 @@
+﻿using System.Diagnostics;
+using PetriNetCore;
+
+COMPILER PnArcLang
+	public CreatePetriNet Builder {get;set;}
+
+    private static CreatePetriNet GenerateArc(CreatePetriNet builder,
+                                                string p,
+                                                string t,
+                                                int weight,
+                                                bool isInhibitor,
+                                                bool isIntoTransition)
+    {
+        builder.WithPlaces(p).WithTransitions(t);
+        var connectionBuilder = builder.With(t).Weight(weight);
+        if (isInhibitor)
+        {
+            connectionBuilder.AsInhibitor();
+        }
+        if (isIntoTransition)
+        {
+            connectionBuilder.FedBy(p);
+        }
+        else
+        {
+            connectionBuilder.Feeding(p);
+        }
+        return connectionBuilder.Done();
+    }
+
+CHARACTERS
+	digit = '0'..'9' .
+	letter = 'a' .. 'z' .
+TOKENS
+	number = digit {digit} .
+	ident = letter {(letter | digit)} .
+IGNORE '\r' + '\n'
+
+PRODUCTIONS
+	PnArcLang								(.
+												string src = "", dst = "";
+												Debug.Assert(Builder != null);
+												bool isInArc = true;
+												int weight = 1;
+												bool isInhibitor = false;
+											.)
+	 = SrcName<ref src> 
+		ArcDetail<ref isInArc, ref weight, ref isInhibitor> 
+		DstName<ref dst>					(.
+											string t = isInArc ? dst.ToString() : src.ToString();
+											string p = isInArc ? src.ToString() : dst.ToString();
+
+											GenerateArc(Builder,p,t,weight,isInhibitor, isInArc);
+											.)
+	 .
+
+	SrcName<ref string src> = ident			(.src = t.val;.)
+	.
+
+	DstName<ref string dst> = ident			(.dst = t.val;.)
+	.
+
+	ArcDetail<ref bool isInArc, ref int weight, ref bool inhib> (.
+																weight = 1;
+																isInArc = true;
+																inhib = false;
+																.)
+	 = InArcDetail<ref inhib, ref weight>	(.
+											isInArc = true;
+											.)
+	 | OutArcDetail<ref inhib, ref weight>	(.
+											isInArc = false;
+											.)
+	 .
+	InArcDetail<ref bool inhib, ref int weight>	(.inhib = false;.)
+	 = ')' {'-'} 
+		[
+		number								(.
+											int.TryParse(t.val, out weight);
+											.)
+		]									 
+		{'-'} 
+		[
+		'o'									(. inhib = true; .) 
+		]								
+		'[' .
+	OutArcDetail<ref bool inhib, ref int weight>	(.inhib = false;.) 
+		= ']' {'-'} 
+		[
+		number								(.
+											int.TryParse(t.val, out weight);
+											.)
+		]									 
+		{'-'} '(' .
+END PnArcLang.

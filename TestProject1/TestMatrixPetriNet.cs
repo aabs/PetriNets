@@ -2,36 +2,23 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
+using NUnit.Framework;
 using PetriNetCore;
 
 namespace TestProject1
 {
 
-    [TestClass]
+    [TestFixture]
     public class TestMatrixPetriNet
     {
-        [TestMethod]
+        [Test]
         public void TestCreate2to1MatrixNet()
         {
             var m = new Marking(3, new Dictionary<int, int> { { 0, 1 }, { 1, 1 }, { 2, 0 } });
-            var p = new MatrixPetriNet("p",
-                new Dictionary<int, string> {
-                    {0, "p0"},
-                    {1, "p1"},
-                    {2, "p2"}
-                },
-                new Dictionary<int, string> { { 0, "t0" } },
-                new Dictionary<int, List<InArc>>(){
-                    {0, new List<InArc>(){new InArc(0),new InArc(1)}}
-                },
-                new Dictionary<int, List<OutArc>>(){
-                    {0, new List<OutArc>(){new OutArc(2)}}
-                });
             Assert.AreEqual(1, m[1]);
         }
 
-        [TestMethod]
+        [Test]
         public void Test1to1Enablement()
         {
             var m = new Marking(2,
@@ -53,10 +40,10 @@ namespace TestProject1
             Assert.AreEqual(true, p.IsEnabled(0, m));
         }
 
-        [TestMethod]
+        [Test]
         public void TestSetMarkingAffectsEnablementszx()
         {
-            var p = TestClass2.CreatePNTwoInOneOut();
+            var p = TestFixture2.CreatePNTwoInOneOut();
             var m = new Marking(3, new Dictionary<int, int>(){
                 {0,1}, {1,1}, {2,0}
             });
@@ -65,7 +52,7 @@ namespace TestProject1
             Assert.AreEqual(false, p.IsEnabled(0, m));
         }
 
-        [TestMethod]
+        [Test]
         public void Test1to1Fire()
         {
             var m = new Marking(2, new Dictionary<int, int> { { 0, 1 }, { 1, 0 } });
@@ -88,7 +75,7 @@ namespace TestProject1
             Assert.AreEqual(1, m[1]);
         }
 
-        [TestMethod]
+        [Test]
         public void Test2to1EnablementAndFiring()
         {
             var m = new Marking(3,
@@ -116,7 +103,7 @@ namespace TestProject1
             Assert.AreEqual(0, m[2]);
         }
 
-        [TestMethod]
+        [Test]
         public void TestMarkingFlowInComplexNet()
         {
             var m = new Marking(4,
@@ -211,7 +198,7 @@ namespace TestProject1
                 { Places.p4, 0 } });
         }
 
-        [TestMethod]
+        [Test]
         public void TestMarkingFlowInBifurcatedTransition() // a bifurcating transition
         {
             var m = new Marking(3);
@@ -251,7 +238,7 @@ namespace TestProject1
                 { Places.p3, 1 } });
         }
 
-        [TestMethod]
+        [Test]
         public void TestSelfTransition()
         {
             var m = new Marking(1,
@@ -279,7 +266,7 @@ namespace TestProject1
             Assert.AreEqual(1, m[(int)Places.p1]);
         }
 
-        [TestMethod]
+        [Test]
         public void TestDoubleSelfTransition()
         {
             var m = new Marking(1, new Dictionary<int, int> 
@@ -316,7 +303,7 @@ namespace TestProject1
             }
         }
 
-        [TestMethod]
+        [Test]
         public void TestLoadPnmlFile()
         {
             var path = @"C:\shared.datastore\repository\personal\dev\prototypes\Automata\PetriNet\pnml.ex1.xml";
@@ -336,7 +323,7 @@ namespace TestProject1
             pn1.Fire(markings.First().Value);
         }
 
-        [TestMethod]
+        [Test]
         public void TestTransitionFunctionExecution()
         {
             var m = new Marking(2, new Dictionary<int, int> 
@@ -368,7 +355,7 @@ namespace TestProject1
         }
 
 
-        [TestMethod]
+        [Test]
         public void TestFireConflictingTransitions()
         {
             var m = new Marking(3, new Dictionary<int, int> 
@@ -399,7 +386,7 @@ namespace TestProject1
             Assert.AreEqual(true, p.IsEnabled(0, m));
         }
 
-        [TestMethod]
+        [Test]
         public void TestInputTransition()
         {
             var m = new Marking(1, new Dictionary<int, int> 
@@ -428,7 +415,7 @@ namespace TestProject1
             Assert.IsTrue(p.IsEnabled(0, m));
         }
 
-        [TestMethod]
+        [Test]
         public void TestDrainTransition()
         {
             var m = new Marking(1, new Dictionary<int, int> 
@@ -456,7 +443,7 @@ namespace TestProject1
             }
         }
 
-        [TestMethod]
+        [Test]
         public void TestPrioritySetup()
         {
             var m = new Marking(3, new Dictionary<int, int> 
@@ -486,7 +473,7 @@ namespace TestProject1
             Assert.AreEqual(2, p.GetTransitionPriority(1));
         }
 
-        [TestMethod]
+        [Test]
         public void TestConflictDetection()
         {
             var m = new Marking(3, new Dictionary<int, int> 
@@ -519,7 +506,7 @@ namespace TestProject1
             Assert.IsTrue(p.IsConflicted(m));
         }
 
-        [TestMethod]
+        [Test]
         public void TestPrioritySelection()
         {
             var m = new Marking(3, new Dictionary<int, int> 
@@ -550,7 +537,7 @@ namespace TestProject1
             Assert.AreEqual(1, transId.Value);
         }
 
-        [TestMethod]
+        [Test]
         public void TestPrioritySelection2()
         {
             var m = new Marking(4, new Dictionary<int, int> 

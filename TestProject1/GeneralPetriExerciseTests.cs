@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using PetriNetCore;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
+using NUnit.Framework;
 
 namespace TestProject1
 {
@@ -16,17 +16,17 @@ namespace TestProject1
         t1 = 0, t2 = 1, t3 = 2
     }
 
-    [TestClass]
+    [TestFixture]
     public class TestGraphPetriNet
     {
-        [TestMethod]
+        [Test]
         public void TestAccessMarking()
         {
             var m = new Marking(3, new Dictionary<int, int> { { 0, 1 }, { 1, 1 }, { 2, 0 } });
             Assert.AreEqual(1, m[1]);
         }
 
-        [TestMethod]
+        [Test]
         public void TestMarkingTransitionEnabled()
         {
             var m = new Marking(2, new Dictionary<int, int> { { 0, 0 }, { 1, 0 } });
@@ -47,18 +47,18 @@ namespace TestProject1
             Assert.AreEqual(true, p.IsEnabled(0, m));
         }
 
-        [TestMethod]
+        [Test]
         public void TestMarkingAffectsEnablement()
         {
             var m = new Marking(2, new Dictionary<int, int> { { 0, 1 }, { 1, 1 } });
-            var p = TestClass2.CreatePNTwoInOneOut();
+            var p = TestFixture2.CreatePNTwoInOneOut();
 
             Assert.AreEqual(true, p.IsEnabled(0, m));
             m[0] = 0;
             Assert.AreEqual(false, p.IsEnabled(0, m));
         }
 
-        [TestMethod]
+        [Test]
         public void TestFireCreatesModifiedMarking()
         {
             var m = new Marking(2,
@@ -85,7 +85,7 @@ namespace TestProject1
             Assert.AreEqual(1, m[1]);
         }
 
-        [TestMethod]
+        [Test]
         public void TestFireCreatesModifiedMarking2()
         {
             var m = new Marking(3,
@@ -113,7 +113,7 @@ namespace TestProject1
             Assert.AreEqual(0, m[2]);
         }
 
-        [TestMethod]
+        [Test]
         public void TestMultyEnabledPetriNet()
         {
             var m = new Marking(4,
@@ -208,7 +208,7 @@ namespace TestProject1
                 { (int)Places.p4, 0 } });
         }
 
-        [TestMethod]
+        [Test]
         public void TestBifurcatingTransition() // a bifurcating transition
         {
             var m = new Marking(3,
@@ -254,7 +254,7 @@ namespace TestProject1
                 { (int)Places.p3, 1 } });
         }
 
-        [TestMethod]
+        [Test]
         public void TestSelfTransition()
         {
             var m = new Marking(1, new Dictionary<int, int> 
@@ -281,7 +281,7 @@ namespace TestProject1
             Assert.AreEqual(1, m[(int)Places.p1]);
         }
 
-        [TestMethod]
+        [Test]
         public void TestDoubleSelfTransition()
         {
             var m = new Marking(1,
@@ -319,7 +319,7 @@ namespace TestProject1
             }
         }
 
-        [TestMethod]
+        [Test]
         public void TestLoadPnmlFile()
         {
             var path = @"C:\shared.datastore\repository\personal\dev\prototypes\Automata\PetriNet\pnml.ex1.xml";
@@ -339,7 +339,7 @@ namespace TestProject1
             pn1.Fire(markings.First().Value);
         }
 
-        [TestMethod]
+        [Test]
         public void TestTransitionFunctionExecution()
         {
             var m = new Marking(2,
@@ -372,7 +372,7 @@ namespace TestProject1
         }
 
 
-        [TestMethod]
+        [Test]
         public void TestFireConflictingTransitions()
         {
             var m = new Marking(3,                new Dictionary<int, int> 
@@ -403,7 +403,7 @@ namespace TestProject1
             Assert.AreEqual(true, p.IsEnabled(0,m));
         }
 
-        [TestMethod]
+        [Test]
         public void TestInputTransition()
         {
             var m = new Marking(1,
@@ -432,7 +432,7 @@ namespace TestProject1
             Assert.IsTrue(p.IsEnabled(0, m));
         }
 
-        [TestMethod]
+        [Test]
         public void TestDrainTransition()
         {
             var m = new Marking(1, new Dictionary<int, int> 
@@ -460,7 +460,7 @@ namespace TestProject1
             }
         }
 
-        [TestMethod]
+        [Test]
         public void TestPrioritySetup()
         {
             var p = new GraphPetriNet("p",
@@ -484,7 +484,7 @@ namespace TestProject1
             Assert.AreEqual(2, p.GetTransitionPriority(1));
         }
 
-        [TestMethod]
+        [Test]
         public void TestConflictDetection()
         {
             var m = new Marking(3,
@@ -518,7 +518,7 @@ namespace TestProject1
             Assert.IsTrue(p.IsConflicted(m));
         }
 
-        [TestMethod]
+        [Test]
         public void TestPrioritySelection()
         {
             var m = new Marking(3,
@@ -549,7 +549,7 @@ namespace TestProject1
             Assert.IsTrue(transId.HasValue);
             Assert.AreEqual(1, transId.Value);
         }
-        [TestMethod]
+        [Test]
         public void TestPrioritySelection2()
         {
             var m = new Marking(4,
