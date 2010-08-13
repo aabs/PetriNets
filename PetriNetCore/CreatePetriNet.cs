@@ -1,6 +1,9 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics.Contracts;
+using System.IO;
 using System.Linq;
+using System.Text;
 
 namespace PetriNetCore
 {
@@ -104,6 +107,47 @@ namespace PetriNetCore
     }
     public class CreatePetriNet
     {
+        /// <summary>
+        /// Adds the specs in textual shorthand
+        /// </summary>
+        /// <returns>a modified version of the graph with any transitions added</returns>
+        /// <example>
+        /// the examples below show the possible cases. Assume that place and transition names <i>must</i> be alphanumeric.
+        /// <list type="table">
+        /// <item>
+        /// <term><c>t]-(p</c></term>
+        /// <description>a simple links from a transition to a place</description>
+        /// </item>
+        /// <item><term><c>p)-[t</c></term>
+        /// <description>a simple link from a place to a transition</description>
+        /// </item>
+        /// <item><term><c>p)-o[t</c></term>
+        /// <description>An inhibiting link from a place to a transition</description>
+        /// </item>
+
+        /// <item><term><c>t]-2-(p</c></term>
+        /// <description>a weighted link from a transition to a place (weight: 2)</description>
+        /// </item>
+        /// <item><term><c>p)-2-[t</c></term>
+        /// <description>a weighted link from a place to a transition (weight: 2)</description>
+        /// </item>
+        /// <item><term><c>p)-2-o[t</c></term>
+        /// <description>a weighted inhibition link from a place to a transition</description>
+        /// </item>
+        /// </list>
+        /// </example>
+        public static CreatePetriNet Parse(string spec)
+        {
+            Parser parser = new Parser(new Scanner(new MemoryStream(ASCIIEncoding.Default.GetBytes(spec))));
+            parser.Parse();
+            if (parser.errors.count > 0)
+            {
+                throw new ParserException(parser.errors);
+            }
+            return parser.Builder;
+        }
+
+
         public string Name { get; set; }
         public Dictionary<int, string> Places { get; set; }
         public Dictionary<int, string> Transitions { get; set; }
@@ -127,67 +171,58 @@ namespace PetriNetCore
 
         public CreatePetriNet WithPlaces(params string[] placeNames)
         {
-            if (Places != null)
-            {
-                throw new ApplicationException("Places has already been initialised");
-            }
-            if (placeNames == null)
-            {
-                throw new ArgumentException("placeNames");
-            }
+            Contract.Requires(placeNames.Count() != 0);
+            Contract.Requires(placeNames.All(s1 => !string.IsNullOrWhiteSpace(s1)));
+            Contract.Requires(placeNames.All(s1 => s1.All(Char.IsLetterOrDigit)));
 
-            if (placeNames.Count() == 0)
+            if (Places == null)
             {
-                throw new ArgumentException("placeNames");
+                Places = new Dictionary<int, string>();
             }
-
-            if (placeNames.Any(s1 => string.IsNullOrWhiteSpace(s1)))
-            {
-                throw new ArgumentException("placeNames");
-            }
-
-            if (!placeNames.All(s1 => s1.All(Char.IsLetterOrDigit)))
-            {
-                throw new ArgumentException("placeNames");
-            }
-
-            Places = placeNames.Select((s,
+            var tmp = placeNames.Select((s,
                                         i) => Tuple.Create(i,
                                                            s)).ToDictionary(tuple => tuple.Item1,
                                                                             tuple1 => tuple1.Item2);
+
+            int count = (Places.Count>0? Places.Keys.Max():-1) + 1;
+
+            foreach (var item in tmp)
+            {
+                if (!Places.ContainsValue(item.Value))
+                {
+                    Places[count] = item.Value;
+                    count++;
+                }
+            }
             return this;
         }
         public CreatePetriNet AndPlaces(params string[] placeNames) { return WithPlaces(placeNames); }
         public CreatePetriNet WithTransitions(params string[] transitionNames)
         {
-            if (Transitions != null)
+            Contract.Requires(transitionNames.Count() != 0);
+            Contract.Requires(transitionNames.All(s1 => !string.IsNullOrWhiteSpace(s1)));
+            Contract.Requires(transitionNames.All(s1 => s1.All(Char.IsLetterOrDigit)));
+
+            if (Transitions == null)
             {
-                throw new ApplicationException("Places has already been initialised");
-            }
-            if (transitionNames == null)
-            {
-                throw new ArgumentException("placeNames");
+                Transitions = new Dictionary<int, string>();
             }
 
-            if (transitionNames.Count() == 0)
-            {
-                throw new ArgumentException("placeNames");
-            }
-
-            if (transitionNames.Any(s1 => string.IsNullOrWhiteSpace(s1)))
-            {
-                throw new ArgumentException("placeNames");
-            }
-
-            if (!transitionNames.All(s1 => s1.All(Char.IsLetterOrDigit)))
-            {
-                throw new ArgumentException("placeNames");
-            }
-
-            Transitions = transitionNames.Select((s,
+            var tmp = transitionNames.Select((s,
                                         i) => Tuple.Create(i,
                                                            s)).ToDictionary(tuple => tuple.Item1,
                                                                             tuple1 => tuple1.Item2);
+
+            int count = (Transitions.Count > 0 ? Transitions.Keys.Max() : -1) + 1;
+
+            foreach (var item in tmp)
+            {
+                if (!Transitions.ContainsValue(item.Value))
+                {
+                    Transitions[count] = item.Value;
+                    count++;
+                }
+            }
             return this;
         }
         public CreatePetriNet AndTransitions(params string[] transitionNames) { return WithTransitions(transitionNames); }

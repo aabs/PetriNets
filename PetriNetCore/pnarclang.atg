@@ -1,31 +1,44 @@
-﻿using System.Diagnostics;
+﻿using System.Linq;
+using System.Collections.Generic;
+using System.Diagnostics;
+using System.Diagnostics.Contracts;
 using PetriNetCore;
 
-COMPILER PnArcLang
+COMPILER PetriNetSpec
+
 	public CreatePetriNet Builder {get;set;}
 
     private static CreatePetriNet GenerateArc(CreatePetriNet builder,
-                                                string p,
-                                                string t,
+                                                List<string> p,
+                                                List<string> t,
                                                 int weight,
                                                 bool isInhibitor,
                                                 bool isIntoTransition)
     {
-        builder.WithPlaces(p).WithTransitions(t);
-        var connectionBuilder = builder.With(t).Weight(weight);
-        if (isInhibitor)
-        {
-            connectionBuilder.AsInhibitor();
-        }
-        if (isIntoTransition)
-        {
-            connectionBuilder.FedBy(p);
-        }
-        else
-        {
-            connectionBuilder.Feeding(p);
-        }
-        return connectionBuilder.Done();
+        Contract.Requires(!p.Any(x => string.IsNullOrWhiteSpace(x)));
+        Contract.Requires(!t.Any(x => string.IsNullOrWhiteSpace(x)));
+		Contract.Requires(p.Intersect(t).Count() == 0);
+		Contract.Requires(weight >= 1);
+        var places = p.ToArray();
+        var transitions = t.ToArray();
+        builder.WithPlaces(places).WithTransitions(transitions);
+		foreach(var tran in t){
+			var connectionBuilder = builder.With(tran).Weight(weight);
+			if (isInhibitor)
+			{
+				connectionBuilder.AsInhibitor();
+			}
+			if (isIntoTransition)
+			{
+				connectionBuilder.FedBy(places);
+			}
+			else
+			{
+				connectionBuilder.Feeding(places);
+			}
+        connectionBuilder.Done();
+		}
+		return builder;
     }
 
 CHARACTERS
@@ -37,34 +50,61 @@ TOKENS
 IGNORE '\r' + '\n'
 
 PRODUCTIONS
-	PnArcLang								(.
-												string src = "", dst = "";
-												Debug.Assert(Builder != null);
-												bool isInArc = true;
-												int weight = 1;
-												bool isInhibitor = false;
-											.)
+PetriNetSpec						(.
+									.)
+	=
+	"PetriNet" ":" 
+		ident						(.	
+									Builder = CreatePetriNet.Called(t.val);
+									.)
+		';'
+	"Graph"
+	ArcSetSpec {ArcSetSpec}
+	"End"
+	.
+
+
+ArcSetSpec							(.
+									List<string> src = new List<string>();
+									List<string> dst = new List<string>();
+									Debug.Assert(Builder != null);
+									bool isInArc = true;
+									int weight = 1;
+									bool isInhibitor = false;
+									.)
 	 = SrcName<ref src> 
 		ArcDetail<ref isInArc, ref weight, ref isInhibitor> 
-		DstName<ref dst>					(.
-											string t = isInArc ? dst.ToString() : src.ToString();
-											string p = isInArc ? src.ToString() : dst.ToString();
+		DstName<ref dst>			(.
+									List<string> t = isInArc ? dst : src;
+									List<string> p = isInArc ? src : dst;
 
-											GenerateArc(Builder,p,t,weight,isInhibitor, isInArc);
-											.)
+									GenerateArc(Builder,p,t,weight,isInhibitor, isInArc);
+									.)
+		';'
 	 .
 
-	SrcName<ref string src> = ident			(.src = t.val;.)
+	SrcName<.ref List<string> src.>
+	=	StringList<ref src>.
+
+	DstName<.ref List<string> dst.>
+	=	StringList<ref dst>.
+
+	StringList<.ref List<string> src.> 
+	= 
+		ident						(.  src.Add(t.val); .)
+	|	'{'
+		ident						(.  src.Add(t.val); .)
+		{ ','	
+			ident					(.  src.Add(t.val); .)
+		}	
+		'}'
 	.
 
-	DstName<ref string dst> = ident			(.dst = t.val;.)
-	.
-
-	ArcDetail<ref bool isInArc, ref int weight, ref bool inhib> (.
-																weight = 1;
-																isInArc = true;
-																inhib = false;
-																.)
+	ArcDetail<ref bool isInArc, ref int weight, ref bool inhib> 	(.
+									weight = 1;
+									isInArc = true;
+									inhib = false;
+									.)
 	 = InArcDetail<ref inhib, ref weight>	(.
 											isInArc = true;
 											.)
@@ -83,6 +123,7 @@ PRODUCTIONS
 		[
 		'o'									(. inhib = true; .) 
 		]								
+		{'-'} 
 		'[' .
 	OutArcDetail<ref bool inhib, ref int weight>	(.inhib = false;.) 
 		= ']' {'-'} 
@@ -92,4 +133,4 @@ PRODUCTIONS
 											.)
 		]									 
 		{'-'} '(' .
-END PnArcLang.
+END PetriNetSpec .
