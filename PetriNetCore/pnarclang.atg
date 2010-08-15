@@ -44,23 +44,36 @@ COMPILER PetriNetSpec
 CHARACTERS
 	digit = '0'..'9' .
 	letter = 'a' .. 'z' .
+
 TOKENS
 	number = digit {digit} .
 	ident = letter {(letter | digit)} .
+	pnStart = "PetriNet" .
+	specStart = ":" .
+	end = "End" . 
+	placeFromEnd = ')' .
+	placeToEnd = '(' .
+	tranFromEnd = ']' .
+	tranToEnd = '[' .
+	inhibitorMark = 'o' .
+	arcLine = '-' .
+	sep = ';' .
+	idListStart = '{' .
+	idListEnd = '}' .
+	listSep = ',' .
+
 IGNORE '\r' + '\n'
 
 PRODUCTIONS
 PetriNetSpec						(.
 									.)
 	=
-	"PetriNet" ":" 
+	pnStart 
 		ident						(.	
 									Builder = CreatePetriNet.Called(t.val);
 									.)
-		';'
-	"Graph"
+	specStart
 	ArcSetSpec {ArcSetSpec}
-	"End"
 	.
 
 
@@ -80,7 +93,7 @@ ArcSetSpec							(.
 
 									GenerateArc(Builder,p,t,weight,isInhibitor, isInArc);
 									.)
-		';'
+		sep
 	 .
 
 	SrcName<.ref List<string> src.>
@@ -92,12 +105,12 @@ ArcSetSpec							(.
 	StringList<.ref List<string> src.> 
 	= 
 		ident						(.  src.Add(t.val); .)
-	|	'{'
+	|	idListStart
 		ident						(.  src.Add(t.val); .)
-		{ ','	
+		{ listSep	
 			ident					(.  src.Add(t.val); .)
 		}	
-		'}'
+		idListEnd
 	.
 
 	ArcDetail<ref bool isInArc, ref int weight, ref bool inhib> 	(.
@@ -113,24 +126,25 @@ ArcSetSpec							(.
 											.)
 	 .
 	InArcDetail<ref bool inhib, ref int weight>	(.inhib = false;.)
-	 = ')' {'-'} 
+	 = placeFromEnd {arcLine} 
 		[
 		number								(.
 											int.TryParse(t.val, out weight);
 											.)
 		]									 
-		{'-'} 
+		{arcLine} 
 		[
-		'o'									(. inhib = true; .) 
+		inhibitorMark									(. inhib = true; .) 
 		]								
-		{'-'} 
-		'[' .
+		{arcLine} 
+		tranToEnd .
 	OutArcDetail<ref bool inhib, ref int weight>	(.inhib = false;.) 
-		= ']' {'-'} 
+		= tranFromEnd {arcLine} 
 		[
 		number								(.
 											int.TryParse(t.val, out weight);
 											.)
 		]									 
-		{'-'} '(' .
+		{arcLine} placeToEnd .
+
 END PetriNetSpec .

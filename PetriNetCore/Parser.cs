@@ -14,7 +14,20 @@ public class Parser {
 	public const int _EOF = 0;
 	public const int _number = 1;
 	public const int _ident = 2;
-	public const int maxT = 17;
+	public const int _pnStart = 3;
+	public const int _specStart = 4;
+	public const int _end = 5;
+	public const int _placeFromEnd = 6;
+	public const int _placeToEnd = 7;
+	public const int _tranFromEnd = 8;
+	public const int _tranToEnd = 9;
+	public const int _inhibitorMark = 10;
+	public const int _arcLine = 11;
+	public const int _sep = 12;
+	public const int _idListStart = 13;
+	public const int _idListEnd = 14;
+	public const int _listSep = 15;
+	public const int maxT = 16;
 
 	const bool T = true;
 	const bool x = false;
@@ -124,17 +137,14 @@ public CreatePetriNet Builder {get;set;}
 	void PetriNetSpec() {
 		
 		Expect(3);
-		Expect(4);
 		Expect(2);
 		Builder = CreatePetriNet.Called(t.val);
 		
-		Expect(5);
-		Expect(6);
+		Expect(4);
 		ArcSetSpec();
-		while (la.kind == 2 || la.kind == 8) {
+		while (la.kind == 2 || la.kind == 13) {
 			ArcSetSpec();
 		}
-		Expect(7);
 	}
 
 	void ArcSetSpec() {
@@ -153,7 +163,7 @@ public CreatePetriNet Builder {get;set;}
 		
 											GenerateArc(Builder,p,t,weight,isInhibitor, isInArc);
 											
-		Expect(5);
+		Expect(12);
 	}
 
 	void SrcName(ref List<string> src) {
@@ -165,15 +175,15 @@ public CreatePetriNet Builder {get;set;}
 		isInArc = true;
 		inhib = false;
 		
-		if (la.kind == 11) {
+		if (la.kind == 6) {
 			InArcDetail(ref inhib, ref weight);
 			isInArc = true;
 			
-		} else if (la.kind == 15) {
+		} else if (la.kind == 8) {
 			OutArcDetail(ref inhib, ref weight);
 			isInArc = false;
 			
-		} else SynErr(18);
+		} else SynErr(17);
 	}
 
 	void DstName(ref List<string> dst) {
@@ -184,23 +194,23 @@ public CreatePetriNet Builder {get;set;}
 		if (la.kind == 2) {
 			Get();
 			src.Add(t.val); 
-		} else if (la.kind == 8) {
+		} else if (la.kind == 13) {
 			Get();
 			Expect(2);
 			src.Add(t.val); 
-			while (la.kind == 9) {
+			while (la.kind == 15) {
 				Get();
 				Expect(2);
 				src.Add(t.val); 
 			}
-			Expect(10);
-		} else SynErr(19);
+			Expect(14);
+		} else SynErr(18);
 	}
 
 	void InArcDetail(ref bool inhib, ref int weight) {
 		inhib = false;
-		Expect(11);
-		while (la.kind == 12) {
+		Expect(6);
+		while (la.kind == 11) {
 			Get();
 		}
 		if (la.kind == 1) {
@@ -208,23 +218,23 @@ public CreatePetriNet Builder {get;set;}
 			int.TryParse(t.val, out weight);
 			
 		}
-		while (la.kind == 12) {
+		while (la.kind == 11) {
 			Get();
 		}
-		if (la.kind == 13) {
+		if (la.kind == 10) {
 			Get();
 			inhib = true; 
 		}
-		while (la.kind == 12) {
+		while (la.kind == 11) {
 			Get();
 		}
-		Expect(14);
+		Expect(9);
 	}
 
 	void OutArcDetail(ref bool inhib, ref int weight) {
 		inhib = false;
-		Expect(15);
-		while (la.kind == 12) {
+		Expect(8);
+		while (la.kind == 11) {
 			Get();
 		}
 		if (la.kind == 1) {
@@ -232,10 +242,10 @@ public CreatePetriNet Builder {get;set;}
 			int.TryParse(t.val, out weight);
 			
 		}
-		while (la.kind == 12) {
+		while (la.kind == 11) {
 			Get();
 		}
-		Expect(16);
+		Expect(7);
 	}
 
 
@@ -250,7 +260,7 @@ public CreatePetriNet Builder {get;set;}
 	}
 	
 	static readonly bool[,] set = {
-		{T,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x,x}
+		{T,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x}
 
 	};
 } // end Parser
@@ -267,23 +277,22 @@ public class Errors {
 			case 0: s = "EOF expected"; break;
 			case 1: s = "number expected"; break;
 			case 2: s = "ident expected"; break;
-			case 3: s = "\"PetriNet\" expected"; break;
-			case 4: s = "\":\" expected"; break;
-			case 5: s = "\";\" expected"; break;
-			case 6: s = "\"Graph\" expected"; break;
-			case 7: s = "\"End\" expected"; break;
-			case 8: s = "\"{\" expected"; break;
-			case 9: s = "\",\" expected"; break;
-			case 10: s = "\"}\" expected"; break;
-			case 11: s = "\")\" expected"; break;
-			case 12: s = "\"-\" expected"; break;
-			case 13: s = "\"o\" expected"; break;
-			case 14: s = "\"[\" expected"; break;
-			case 15: s = "\"]\" expected"; break;
-			case 16: s = "\"(\" expected"; break;
-			case 17: s = "??? expected"; break;
-			case 18: s = "invalid ArcDetail"; break;
-			case 19: s = "invalid StringList"; break;
+			case 3: s = "pnStart expected"; break;
+			case 4: s = "specStart expected"; break;
+			case 5: s = "end expected"; break;
+			case 6: s = "placeFromEnd expected"; break;
+			case 7: s = "placeToEnd expected"; break;
+			case 8: s = "tranFromEnd expected"; break;
+			case 9: s = "tranToEnd expected"; break;
+			case 10: s = "inhibitorMark expected"; break;
+			case 11: s = "arcLine expected"; break;
+			case 12: s = "sep expected"; break;
+			case 13: s = "idListStart expected"; break;
+			case 14: s = "idListEnd expected"; break;
+			case 15: s = "listSep expected"; break;
+			case 16: s = "??? expected"; break;
+			case 17: s = "invalid ArcDetail"; break;
+			case 18: s = "invalid StringList"; break;
 
 			default: s = "error " + n; break;
 		}

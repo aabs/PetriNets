@@ -287,6 +287,39 @@ namespace TestProject1
 
         }
 
+        [Test, Category("Regression")]
+        public void TestCompareArcLangWithFluentLang()
+        {
+            var pnc = CreatePetriNet.Called("p")
+                .WithPlaces("p1",
+                            "p2",
+                            "p3")
+                .AndTransitions("t1")
+                .With("t1").FedBy("p1")
+                .And().With("t1").Feeding("p2",
+                                          "p3")
+                .Done();
+            var pn1 = pnc.CreateNet();
+            var spec = @" PetriNet net; Graph p1)-[t1; t1]-({p2,p3}; End ";
+            CreatePetriNet pnc2 = CreatePetriNet.Parse(spec);
+            var pn2 = pnc2.CreateNet();
+            var m = pnc2.CreateMarking();
+            m[pnc2.PlaceIndex("p1")] = 1;
+
+            var m1 = pn1.Fire(m);
+            var m2 = pn2.Fire(m);
+
+            Assert.AreEqual(0, m1[pnc.PlaceIndex("p1")]);
+            Assert.AreEqual(1, m1[pnc.PlaceIndex("p2")]);
+            Assert.AreEqual(1, m1[pnc.PlaceIndex("p3")]);
+
+            Assert.AreEqual(0, m2[pnc2.PlaceIndex("p1")]);
+            Assert.AreEqual(1, m2[pnc2.PlaceIndex("p2")]);
+            Assert.AreEqual(1, m2[pnc2.PlaceIndex("p3")]); 
+            
+
+        }
+  
         #endregion
     }
 }
