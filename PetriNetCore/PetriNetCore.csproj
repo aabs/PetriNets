@@ -88,6 +88,8 @@
     <Compile Include="Parser.cs" />
     <Compile Include="PetriNetBase.cs" />
     <Compile Include="CreatePetriNet.cs" />
+    <Compile Include="PetriNetConnectionBuilder.cs" />
+    <Compile Include="PetriNetEventBuilder.cs" />
     <Compile Include="PnmlModelLoader.cs">
       <SubType>Code</SubType>
     </Compile>

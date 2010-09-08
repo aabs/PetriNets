@@ -1,16 +1,12 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
-using System.Text;
 using NUnit.Framework;
 using PetriNetCore;
 
-namespace PetriNetCore
-{
-}
 namespace TestProject1
 {
     [TestFixture]
-    public class TestPetriNetCreator
+    public class TestMatrixPetriNetCreator
     {
         #region test create petri net builder
         [Test]
@@ -217,17 +213,17 @@ namespace TestProject1
                 .And().With("t2").Feeding("p1")
 
                 .And().WhenFiring("t1")
-                    .Run(x => Console.WriteLine("Fired"))
-                    .Run(x => Console.WriteLine("Fired"))
-                    .Run(x => Console.WriteLine("Fired"))
+                .Run(x => Console.WriteLine("Fired"))
+                .Run(x => Console.WriteLine("Fired"))
+                .Run(x => Console.WriteLine("Fired"))
 
                 .And().WhenFiring("t2")
-                    .Run(x => Console.WriteLine("Fired"))
-                    .Run(x => Console.WriteLine("Fired"))
-                    .Run(x => Console.WriteLine("Fired"))
+                .Run(x => Console.WriteLine("Fired"))
+                .Run(x => Console.WriteLine("Fired"))
+                .Run(x => Console.WriteLine("Fired"))
                 .Complete()
                 ;
-            var pn = pnb.CreateNet();
+            var pn = pnb.CreateNet<MatrixPetriNet>();
             Assert.IsNotNull(pn);
             var m = pnb.CreateMarking();
         }
@@ -236,29 +232,29 @@ namespace TestProject1
         public void TestCompareWithOldConstructionTechnique()
         {
             var m = new Marking(3,
-                    new Dictionary<int, int> 
-                    { 
-                        { (int)Places.p1, 0 }, 
-                        { (int)Places.p2, 0 }, 
-                        { (int)Places.p3, 0 } 
-                    });
+                                new Dictionary<int, int> 
+                                    { 
+                                        { (int)Places.p1, 0 }, 
+                                        { (int)Places.p2, 0 }, 
+                                        { (int)Places.p3, 0 } 
+                                    });
             var p = new GraphPetriNet("p",
-                new Dictionary<int, string> {
-                    {(int)Places.p1, "p1"},
-                    {(int)Places.p2, "p2"},
-                    {(int)Places.p3, "p3"}
-                },
-                new Dictionary<int, string> 
-                    { 
-                        { (int)Transitions.t1, "t1" }
-                    },
-                new Dictionary<int, List<InArc>>(){
-                    {(int)Transitions.t1, new List<InArc>(){new InArc((int)Places.p1)}}
-                },
-                new Dictionary<int, List<OutArc>>(){
-                    {(int)Transitions.t1, new List<OutArc>(){new OutArc((int)Places.p2),
-                                                             new OutArc((int)Places.p3)}}
-                });
+                                      new Dictionary<int, string> {
+                                                                      {(int)Places.p1, "p1"},
+                                                                      {(int)Places.p2, "p2"},
+                                                                      {(int)Places.p3, "p3"}
+                                                                  },
+                                      new Dictionary<int, string> 
+                                          { 
+                                              { (int)Transitions.t1, "t1" }
+                                          },
+                                      new Dictionary<int, List<InArc>>(){
+                                                                            {(int)Transitions.t1, new List<InArc>(){new InArc((int)Places.p1)}}
+                                                                        },
+                                      new Dictionary<int, List<OutArc>>(){
+                                                                             {(int)Transitions.t1, new List<OutArc>(){new OutArc((int)Places.p2),
+                                                                                                                      new OutArc((int)Places.p3)}}
+                                                                         });
             
             var pnc = CreatePetriNet.Called("p")
                 .WithPlaces("p1",
@@ -269,7 +265,7 @@ namespace TestProject1
                 .And().With("t1").Feeding("p2",
                                           "p3")
                 .Done();
-            var p2 = pnc.CreateNet();
+            var p2 = pnc.CreateNet<MatrixPetriNet>();
 
             m[(int)Places.p1] = 1;
             
@@ -277,13 +273,13 @@ namespace TestProject1
             var m3 = p2.Fire(m);
 
             AssertMarkings(m2, new Dictionary<int, double>{ 
-                { (int)Places.p1, 0 }, 
-                { (int)Places.p2, 1 },
-                { (int)Places.p3, 1 } });
+                                                              { (int)Places.p1, 0 }, 
+                                                              { (int)Places.p2, 1 },
+                                                              { (int)Places.p3, 1 } });
             AssertMarkings(m3, new Dictionary<int, double>{ 
-                { (int)Places.p1, 0 }, 
-                { (int)Places.p2, 1 },
-                { (int)Places.p3, 1 } });
+                                                              { (int)Places.p1, 0 }, 
+                                                              { (int)Places.p2, 1 },
+                                                              { (int)Places.p3, 1 } });
 
         }
 
@@ -299,10 +295,10 @@ namespace TestProject1
                 .And().With("t1").Feeding("p2",
                                           "p3")
                 .Done();
-            var pn1 = pnc.CreateNet();
+            var pn1 = pnc.CreateNet<MatrixPetriNet>();
             var spec = @" PetriNet net; Graph p1)-[t1; t1]-({p2,p3}; End ";
             CreatePetriNet pnc2 = CreatePetriNet.Parse(spec);
-            var pn2 = pnc2.CreateNet();
+            var pn2 = pnc2.CreateNet<MatrixPetriNet>();
             var m = pnc2.CreateMarking();
             m[pnc2.PlaceIndex("p1")] = 1;
 

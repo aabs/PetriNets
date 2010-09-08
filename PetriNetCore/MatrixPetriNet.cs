@@ -77,6 +77,7 @@ namespace PetriNetCore
             Contract.Requires(placeNames.Count > 0, "places must be non-empty");
             Contract.Requires(transitionNames != null, "must provide a set of transition names");
             Contract.Requires(transitionNames.Count > 0, "there must be at lerast one transition");
+            
             Contract.Requires(inArcs != null, "inArcs cannot be null");
             Contract.Requires(inArcs.Count > 0, "there must be some inArcs");
             Contract.Requires(outArcs != null, "outArcs cannot be null");
@@ -91,7 +92,8 @@ namespace PetriNetCore
             Contract.Ensures(Places.Count == placeNames.Count);
 
             Id = id;
-            InMatrix = new SparseMatrix(placeNames.Count, transitionNames.Count);
+            var tmpMatrix = new SparseMatrix(placeNames.Count, transitionNames.Count);
+            InMatrix = tmpMatrix;
             OutMatrix = new SparseMatrix(placeNames.Count, transitionNames.Count);
             Places = placeNames;
             Transitions = transitionNames;

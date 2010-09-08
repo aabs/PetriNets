@@ -10,7 +10,7 @@ using System;
 
 
 
-public class Parser {
+public partial class Parser {
 	public const int _EOF = 0;
 	public const int _number = 1;
 	public const int _ident = 2;
@@ -40,40 +40,7 @@ public class Parser {
 	public Token la;   // lookahead token
 	int errDist = minErrDist;
 
-public CreatePetriNet Builder {get;set;}
-
-    private static CreatePetriNet GenerateArc(CreatePetriNet builder,
-                                                List<string> p,
-                                                List<string> t,
-                                                int weight,
-                                                bool isInhibitor,
-                                                bool isIntoTransition)
-    {
-        Contract.Requires(!p.Any(x => string.IsNullOrWhiteSpace(x)));
-        Contract.Requires(!t.Any(x => string.IsNullOrWhiteSpace(x)));
-		Contract.Requires(p.Intersect(t).Count() == 0);
-		Contract.Requires(weight >= 1);
-        var places = p.ToArray();
-        var transitions = t.ToArray();
-        builder.WithPlaces(places).WithTransitions(transitions);
-		foreach(var tran in t){
-			var connectionBuilder = builder.With(tran).Weight(weight);
-			if (isInhibitor)
-			{
-				connectionBuilder.AsInhibitor();
-			}
-			if (isIntoTransition)
-			{
-				connectionBuilder.FedBy(places);
-			}
-			else
-			{
-				connectionBuilder.Feeding(places);
-			}
-        connectionBuilder.Done();
-		}
-		return builder;
-    }
+public PetriNetCore.CreatePetriNet Builder { get; set; }
 
 
 
@@ -160,9 +127,8 @@ public CreatePetriNet Builder {get;set;}
 		DstName(ref dst);
 		List<string> t = isInArc ? dst : src;
 		List<string> p = isInArc ? src : dst;
+		                           Builder.GenerateArc(p,t,weight,isInhibitor, isInArc);
 		
-											GenerateArc(Builder,p,t,weight,isInhibitor, isInArc);
-											
 		Expect(12);
 	}
 

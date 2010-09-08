@@ -5,106 +5,13 @@ using System.IO;
 using System.Linq;
 using System.Text;
 
+public partial class Parser
+{
+
+}
+
 namespace PetriNetCore
 {
-    public class PetriNetConnectionBuilder
-    {
-        public CreatePetriNet Builder { get; set; }
-
-        public PetriNetConnectionBuilder(CreatePetriNet builder,
-                                         string transition)
-        {
-            Builder = builder;
-            TransitionName = transition;
-            _weight = 1;
-        }
-
-        public string TransitionName { get; set; }
-        public string[] Args { get; set; }
-        protected bool IsIntoTransition { get; set; } // i.e. are they InArcs, or OutArcs
-        protected bool CreateInhibitors { get; set; }
-        protected int _weight { get; set; }
-
-        public PetriNetConnectionBuilder FedBy(params string[] placeNames)
-        {
-            Args = placeNames;
-            IsIntoTransition = true;
-            return this;
-        }
-
-        public PetriNetConnectionBuilder Feeding(params string[] placeNames)
-        {
-            Args = placeNames;
-            IsIntoTransition = false;
-            return this;
-        }
-
-        public PetriNetConnectionBuilder AsInhibitor()
-        {
-            CreateInhibitors = true;
-            return this;
-        }
-
-        public CreatePetriNet Done()
-        {
-            return And();
-        }
-
-        public CreatePetriNet And()
-        {
-            foreach (var arg in Args)
-            {
-                if (IsIntoTransition)
-                {
-                    Builder.AddInArc(arg, TransitionName, CreateInhibitors, _weight);
-                }
-                else
-                {
-                    Builder.AddOutArc(TransitionName, arg, _weight);
-                }
-            }
-            return Builder;
-        }
-
-        internal PetriNetConnectionBuilder Weight(int weight)
-        {
-            _weight = weight;
-            return this;
-        }
-    }
-    public class PetriNetEventBuilder
-    {
-        private CreatePetriNet _builder;
-        private string _transitionName;
-        List<Action<GraphPetriNet>> tasks = new List<Action<GraphPetriNet>>();
-
-        public PetriNetEventBuilder(CreatePetriNet createPetriNet, string transitionName)
-        {
-            this._builder = createPetriNet;
-            this._transitionName = transitionName;
-        }
-
-        public PetriNetEventBuilder Run(Action<GraphPetriNet> f)
-        {
-            tasks.Add(f);
-            return this;
-        }
-
-        public CreatePetriNet And()
-        {
-            return Complete();
-        }
-
-        public CreatePetriNet Complete()
-        {
-            foreach (var task in tasks)
-            {
-                _builder.AddEvent(_transitionName,
-                                  task);
-            }
-            return _builder;
-        }
-    }
     public class CreatePetriNet
     {
         /// <summary>
@@ -147,6 +54,38 @@ namespace PetriNetCore
             return parser.Builder;
         }
 
+        public PetriNetCore.CreatePetriNet GenerateArc(List<string> p,
+                                                    List<string> t,
+                                                    int weight,
+                                                    bool isInhibitor,
+                                                    bool isIntoTransition)
+        {
+            Contract.Requires(!p.Any(x => string.IsNullOrWhiteSpace(x)));
+            Contract.Requires(!t.Any(x => string.IsNullOrWhiteSpace(x)));
+            Contract.Requires(p.Intersect(t).Count() == 0);
+            Contract.Requires(weight >= 1);
+            var places = p.ToArray();
+            var transitions = t.ToArray();
+            var builder = WithPlaces(places).WithTransitions(transitions);
+            foreach (var tran in t)
+            {
+                var connectionBuilder = builder.With(tran).Weight(weight);
+                if (isInhibitor)
+                {
+                    connectionBuilder.AsInhibitor();
+                }
+                if (isIntoTransition)
+                {
+                    connectionBuilder.FedBy(places);
+                }
+                else
+                {
+                    connectionBuilder.Feeding(places);
+                }
+                connectionBuilder.Done();
+            }
+            return builder;
+        }
 
         public string Name { get; set; }
         public Dictionary<int, string> Places { get; set; }
@@ -232,15 +171,27 @@ namespace PetriNetCore
             return result;
         }
 
-        public GraphPetriNet CreateNet()
+        public T CreateNet<T>() where T : class
         {
-            return new GraphPetriNet(
-                Name,
-                Places,
-                Transitions, 
-                InArcs,
-                OutArcs);
-            throw new NotImplementedException();
+            if (typeof(T).Equals( typeof(GraphPetriNet)))
+            {
+                return new GraphPetriNet(
+                    Name,
+                    Places,
+                    Transitions,
+                    InArcs,
+                    OutArcs) as T;
+            }
+            if (typeof(T).Equals(typeof(MatrixPetriNet)))
+            {
+                return new MatrixPetriNet(
+                    Name,
+                    Places,
+                    Transitions,
+                    InArcs,
+                    OutArcs) as T;
+            }
+            throw new ApplicationException("Unrecognised petri net type requested");
         }
 
         public Marking CreateMarking()

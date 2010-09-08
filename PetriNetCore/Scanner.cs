@@ -223,19 +223,18 @@ public class Scanner {
 	static Scanner() {
 		start = new Hashtable(128);
 		for (int i = 48; i <= 57; ++i) start[i] = 1;
+		for (int i = 65; i <= 90; ++i) start[i] = 2;
 		for (int i = 97; i <= 122; ++i) start[i] = 2;
-		start[80] = 3; 
-		start[58] = 11; 
-		start[69] = 12; 
-		start[41] = 15; 
-		start[40] = 16; 
-		start[93] = 17; 
-		start[91] = 18; 
-		start[45] = 19; 
-		start[59] = 20; 
-		start[123] = 21; 
-		start[125] = 22; 
-		start[44] = 23; 
+		start[58] = 3; 
+		start[41] = 4; 
+		start[40] = 5; 
+		start[93] = 6; 
+		start[91] = 7; 
+		start[45] = 8; 
+		start[59] = 9; 
+		start[123] = 10; 
+		start[125] = 11; 
+		start[44] = 12; 
 		start[Buffer.EOF] = -1;
 
 	}
@@ -301,6 +300,8 @@ public class Scanner {
 
 	void CheckLiteral() {
 		switch (t.val) {
+			case "PetriNet": t.kind = 3; break;
+			case "End": t.kind = 5; break;
 			case "o": t.kind = 10; break;
 			default: break;
 		}
@@ -335,58 +336,27 @@ public class Scanner {
 				else {t.kind = 1; break;}
 			case 2:
 				recEnd = pos; recKind = 2;
-				if (ch >= '0' && ch <= '9' || ch >= 'a' && ch <= 'z') {AddCh(); goto case 2;}
+				if (ch >= '0' && ch <= '9' || ch >= 'A' && ch <= 'Z' || ch >= 'a' && ch <= 'z') {AddCh(); goto case 2;}
 				else {t.kind = 2; t.val = new String(tval, 0, tlen); CheckLiteral(); return t;}
 			case 3:
-				if (ch == 'e') {AddCh(); goto case 4;}
-				else {goto case 0;}
-			case 4:
-				if (ch == 't') {AddCh(); goto case 5;}
-				else {goto case 0;}
-			case 5:
-				if (ch == 'r') {AddCh(); goto case 6;}
-				else {goto case 0;}
-			case 6:
-				if (ch == 'i') {AddCh(); goto case 7;}
-				else {goto case 0;}
-			case 7:
-				if (ch == 'N') {AddCh(); goto case 8;}
-				else {goto case 0;}
-			case 8:
-				if (ch == 'e') {AddCh(); goto case 9;}
-				else {goto case 0;}
-			case 9:
-				if (ch == 't') {AddCh(); goto case 10;}
-				else {goto case 0;}
-			case 10:
-				{t.kind = 3; break;}
-			case 11:
 				{t.kind = 4; break;}
-			case 12:
-				if (ch == 'n') {AddCh(); goto case 13;}
-				else {goto case 0;}
-			case 13:
-				if (ch == 'd') {AddCh(); goto case 14;}
-				else {goto case 0;}
-			case 14:
-				{t.kind = 5; break;}
-			case 15:
+			case 4:
 				{t.kind = 6; break;}
-			case 16:
+			case 5:
 				{t.kind = 7; break;}
-			case 17:
+			case 6:
 				{t.kind = 8; break;}
-			case 18:
+			case 7:
 				{t.kind = 9; break;}
-			case 19:
+			case 8:
 				{t.kind = 11; break;}
-			case 20:
+			case 9:
 				{t.kind = 12; break;}
-			case 21:
+			case 10:
 				{t.kind = 13; break;}
-			case 22:
+			case 11:
 				{t.kind = 14; break;}
-			case 23:
+			case 12:
 				{t.kind = 15; break;}
 
 		}
