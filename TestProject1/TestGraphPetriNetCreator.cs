@@ -203,28 +203,25 @@ namespace TestProject1
         [Test]
         public void TestFullMontySetup()
         {
-            var pnb = CreatePetriNet
-                .Called("net")
-                .WithPlaces("p1", "p2", "p3")
-                .AndTransitions("t1", "t2", "t3")
-
-                .With("t1").FedBy("p1", "p2")
-                .And().With("t2").FedBy("p3").AsInhibitor()
-                .And().With("t1").Feeding("p2")
-                .And().With("t2").Feeding("p1")
-
-                .And().WhenFiring("t1")
-                    .Run(x => Console.WriteLine("Fired"))
-                    .Run(x => Console.WriteLine("Fired"))
-                    .Run(x => Console.WriteLine("Fired"))
-
-                .And().WhenFiring("t2")
-                    .Run(x => Console.WriteLine("Fired"))
-                    .Run(x => Console.WriteLine("Fired"))
-                    .Run(x => Console.WriteLine("Fired"))
-                .Complete()
-                ;
-            var pn = pnb.CreateNet<GraphPetriNet>();
+var pnb = CreatePetriNet
+    .Called("net")
+    .WithPlaces("p1", "p2", "p3")
+    .AndTransitions("t1", "t2", "t3")
+    .With("t1").FedBy("p1", "p2")
+    .And().With("t2").FedBy("p3").AsInhibitor()
+    .And().With("t1").Feeding("p2")
+    .And().With("t2").Feeding("p1")
+    .And().WhenFiring("t1")
+        .Run(x => Console.WriteLine("Fired"))
+        .Run(x => Console.WriteLine("Fired"))
+        .Run(x => Console.WriteLine("Fired"))
+    .And().WhenFiring("t2")
+        .Run(x => Console.WriteLine("Fired"))
+        .Run(x => Console.WriteLine("Fired"))
+        .Run(x => Console.WriteLine("Fired"))
+    .Complete()
+    ;
+var pn = pnb.CreateNet<GraphPetriNet>();
             Assert.IsNotNull(pn);
             var m = pnb.CreateMarking();
         }

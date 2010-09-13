@@ -1,5 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics.Contracts;
+using System.IO;
 using System.Linq;
 using System.Xml.Linq;
 
@@ -54,11 +56,11 @@ namespace PetriNetCore
                                                             int.Parse(
                                                                 p.Element(ns + "initialMarking").Element(ns + "text").
                                                                     Value ?? "0")
-                                                        select new {Guid, Id, Name, Marking}
+                                                        select new { Guid, Id, Name, Marking }
                                            let transitions = from t in n.Descendants(ns + "transition")
                                                              let Guid = GetId()
                                                              let Id = t.Attribute("id").Value
-                                                             select new {Guid, Id}
+                                                             select new { Guid, Id }
                                            let inarcs = from t in transitions
                                                         let ia = from a in n.Descendants(ns + "arc")
                                                                  let sourceId = (from p in places
@@ -67,7 +69,7 @@ namespace PetriNetCore
                                                                                  select p.Guid).SingleOrDefault()
                                                                  where a.Attribute("target").Value == t.Id
                                                                  select new InArc(sourceId)
-                                                        select new {t.Guid, inArcs = ia.ToList()}
+                                                        select new { t.Guid, inArcs = ia.ToList() }
                                            let outarcs = from t in transitions
                                                          let oa = from a in n.Descendants(ns + "arc")
                                                                   let targetId = (from p in transitions
@@ -77,7 +79,7 @@ namespace PetriNetCore
                                                                                   select p.Guid).SingleOrDefault()
                                                                   where a.Attribute("target").Value == t.Id
                                                                   select new OutArc(targetId)
-                                                         select new {t.Guid, outArcs = oa.ToList()}
+                                                         select new { t.Guid, outArcs = oa.ToList() }
                                            where n.Attribute("type").Value == "http://www.example.org/pnml/PTNet"
                                            select new GraphPetriNet(
                                                netid,
@@ -87,6 +89,113 @@ namespace PetriNetCore
                                                outarcs.ToDictionary(y => y.Guid, y => y.outArcs)
                                                );
             return x;
+        }
+    }
+
+    public class NewPnmlLoader<TModelType> where TModelType : class
+    {
+        public NewPnmlLoader()
+        {
+        }
+
+        protected CreatePetriNet Builder { get; set; }
+
+        public IEnumerable<TModelType> Load(string modelPath)
+        {
+            Contract.Requires(!string.IsNullOrWhiteSpace(modelPath));
+            if (!File.Exists(modelPath))
+            {
+                throw new ApplicationException("Model cannot be found");
+            }
+            XDocument doc = XDocument.Parse(File.ReadAllText(modelPath));
+            if (doc == null)
+            {
+                throw new ApplicationException("Unable to read contents of model file");
+            }
+
+            var names = GetModelNames(doc);
+
+            foreach (string name in names)
+            {
+                var netroot = doc.Descendants("net").Where(element => element.Attribute("id").Value.Equals(name)).Single();
+                this.Builder = new CreatePetriNet(name);
+                var placeNames = GatherPlaceNames(netroot);
+                var transitionNames = GatherTransitionNames(netroot);
+                var inArcs = GatherInArcs(netroot, transitionNames);
+                var outArcs = GatherOutArcs(netroot, placeNames);
+                Builder.WithPlaces(placeNames.Select(tuple => tuple.Item1).ToArray());
+                Builder.WithTransitions(transitionNames.Select(tuple => tuple.Item1).ToArray());
+                foreach (var inArc in inArcs)
+                {
+                    var arc = Builder.With(inArc.Item3).FedBy(inArc.Item2).Weight(inArc.Item4);
+                    if (inArc.Item5) // is inhibitor
+                    {
+                        arc.AsInhibitor();
+                    }
+                    arc.Done();
+                }
+                foreach (var outArc in outArcs)
+                {
+                    var arc = Builder.With(outArc.Item2).Feeding(outArc.Item3).Weight(outArc.Item4);
+                    arc.Done();
+                }
+                yield return Builder.CreateNet<TModelType>();
+            }
+        }
+
+        //(arcname, placename, tranname, weight, inhib)
+        IEnumerable<Tuple<string, string, string, int, bool>> GatherInArcs(XElement doc, IEnumerable<Tuple<string, int>> transitions)
+        {
+            return from x in doc.Descendants("arc")
+                   let name = x.Attribute("id").Value
+                   let placeName = x.Attribute("source").Value
+                   let tranName = x.Attribute("target").Value
+                   let weight = x.Descendants("inscription").Descendants("value").SingleOrDefault()
+                   let inhibitor = x.Descendants("type").Where(a => a.Attribute("value").Value == "inhibitor").Count() == 1
+                   where transitions.Any(tuple => tuple.Item1.Equals(tranName))
+                   select Tuple.Create(
+                        name, 
+                        placeName, 
+                        tranName,
+                        weight != null ? int.Parse(weight.Value) : 1, 
+                        inhibitor);
+        }
+
+        //(arcname, tranname, placename, weight)
+        IEnumerable<Tuple<string, string, string, int>> GatherOutArcs(XElement doc, IEnumerable<Tuple<string, int>> places)
+        {
+            return from x in doc.Descendants("arc")
+                   let name = x.Attribute("id").Value
+                   let placeName = x.Attribute("target").Value
+                   let tranName = x.Attribute("source").Value
+                   let weight = x.Descendants("inscription").Descendants("value").SingleOrDefault()
+                   where places.Any(tuple => tuple.Item1.Equals(tranName))
+                   select Tuple.Create(
+                        name,
+                        placeName,
+                        tranName,
+                        weight != null ? int.Parse(weight.Value) : 1);
+        }
+
+        private IEnumerable<Tuple<string, int>> GatherTransitionNames(XElement doc)
+        {
+            return from e in doc.Descendants("transition")
+                   let priority = e.Descendants("priority").Descendants("value").SingleOrDefault()
+                   select Tuple.Create(e.Attribute("id").Value, int.Parse((priority != null) ? priority.Value.Trim() : "1"));
+        }
+
+        private IEnumerable<Tuple<string, int>> GatherPlaceNames(XElement doc)
+        {
+            return from e in doc.Descendants("place")
+                   let capacity = e.Descendants("capacity").Descendants("value").SingleOrDefault()
+                   select Tuple.Create(e.Attribute("id").Value, int.Parse((capacity != null) ? capacity.Value.Trim() : "0"));
+        }
+
+        private IEnumerable<string> GetModelNames(XDocument doc)
+        {
+            return from n in doc.Descendants("net")
+                   where n.Attribute("type").Value == "P/T net"
+                   select n.Attribute("id").Value;
         }
     }
 }

@@ -79,6 +79,7 @@
     <Compile Include="TestMatrixPetriNet.cs" />
     <Compile Include="TestGraphPetriNetCreator.cs" />
     <Compile Include="TestMatrixPetriNetCreator.cs" />
+    <Compile Include="TestNewPnmlLoader.cs" />
     <Compile Include="UtilityExtensions.cs" />
   </ItemGroup>
   <ItemGroup>

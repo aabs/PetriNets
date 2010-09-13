@@ -95,7 +95,7 @@ namespace PetriNetCore
         public Dictionary<int, List<Action<GraphPetriNet>>> TransitionFunctions { get; set; }
         public CreatePetriNet(string name)
         {
-            if (string.IsNullOrWhiteSpace(name) || !name.All(Char.IsLetterOrDigit))
+            if (string.IsNullOrWhiteSpace(name))
             {
                 throw new ArgumentException("name");
             }
