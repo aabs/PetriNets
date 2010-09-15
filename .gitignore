@@ -6,3 +6,5 @@ TestResults
 *.txt~
 _ReSharper*
 *~
+
+/PNML/standard test nets/PIPE.lnk
