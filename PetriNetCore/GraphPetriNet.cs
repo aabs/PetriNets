@@ -41,19 +41,23 @@ namespace PetriNetCore
 
             // each arc into a transition can be seen as an arc out of a place 
             // (which may be convenient for conflict resolution)
-            foreach (var transitionInArcs in InArcs)
+            if (InArcs != null)
             {
-                foreach (var inArc in transitionInArcs.Value)
+                foreach (var transitionInArcs in InArcs)
                 {
-                    if (!PlaceOutArcs.ContainsKey(inArc.Source))
+                    foreach (var inArc in transitionInArcs.Value)
                     {
-                        PlaceOutArcs[inArc.Source] = new List<OutArc>();
+                        if (!PlaceOutArcs.ContainsKey(inArc.Source))
+                        {
+                            PlaceOutArcs[inArc.Source] = new List<OutArc>();
+                        }
+                        PlaceOutArcs[inArc.Source].Add(new OutArc(transitionInArcs.Key));
                     }
-                    PlaceOutArcs[inArc.Source].Add(new OutArc(transitionInArcs.Key));
                 }
             }
 
             OutArcs = outArcs;
+            PlaceCapacities = new Dictionary<int, int>();
         }
 
         public GraphPetriNet(string id,
@@ -76,6 +80,7 @@ namespace PetriNetCore
         public const int MaxSize = 1000;
 
         public Dictionary<int, string> Places = new Dictionary<int, string>();
+        public Dictionary<int, int> PlaceCapacities = new Dictionary<int, int>();
         public Dictionary<int, string> Transitions = new Dictionary<int, string>();
 
         //        public Dictionary<int, int> Markings = new Dictionary<int, int>();

@@ -24,10 +24,10 @@
     <DefineConstants>TRACE;DEBUG;USING_CONTRACTS</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
-    <CodeContractsEnableRuntimeChecking>False</CodeContractsEnableRuntimeChecking>
+    <CodeContractsEnableRuntimeChecking>True</CodeContractsEnableRuntimeChecking>
     <CodeContractsCustomRewriterAssembly />
     <CodeContractsCustomRewriterClass />
-    <CodeContractsRuntimeCheckingLevel>Pre and Post</CodeContractsRuntimeCheckingLevel>
+    <CodeContractsRuntimeCheckingLevel>Preconditions</CodeContractsRuntimeCheckingLevel>
     <CodeContractsRuntimeOnlyPublicSurface>False</CodeContractsRuntimeOnlyPublicSurface>
     <CodeContractsRuntimeThrowOnFailure>True</CodeContractsRuntimeThrowOnFailure>
     <CodeContractsRuntimeCallSiteRequires>False</CodeContractsRuntimeCallSiteRequires>
@@ -90,6 +90,7 @@
     <Compile Include="CreatePetriNet.cs" />
     <Compile Include="PetriNetConnectionBuilder.cs" />
     <Compile Include="PetriNetEventBuilder.cs" />
+    <Compile Include="PlaceSpecifier.cs" />
     <Compile Include="PnmlModelLoader.cs">
       <SubType>Code</SubType>
     </Compile>

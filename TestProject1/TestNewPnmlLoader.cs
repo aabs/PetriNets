@@ -22,11 +22,16 @@ namespace TestProject1
 
         [Test, Category("Regression")]
         [TestCaseSource(typeof(PnmlLoaderDataGenerator), "FullSpecs")]
-        public void TestLoadPnmlFile(string path)
+        public void TestLoadPnmlFile(string path, IEnumerable<string> markingProgression)
         {
             var loader = new NewPnmlLoader<GraphPetriNet>();
             var netlist = loader.Load(path);
-            Assert.AreEqual(1, netlist.Count()); 
+            Assert.AreEqual(1, netlist.Count());
+            var net = netlist.ElementAt(0);
+            foreach (string strMarking in markingProgression)
+            {
+
+            }
         }
     }
     public static class PnmlLoaderDataGenerator
@@ -47,22 +52,30 @@ namespace TestProject1
                 yield return Good(@"C:\dev\PetriNets\PNML\standard test nets\p0)-[{t0.1, t1.2, t2.3}.xml").SetName("p0)-[{t0.1, t1.2, t2.3}.xml");
                 yield return Good(@"C:\dev\PetriNets\PNML\standard test nets\p0)-[{t0.1, t1.2}.xml").SetName("p0)-[{t0.1, t1.2}.xml");
                 yield return Good(@"C:\dev\PetriNets\PNML\standard test nets\p0)-[{t0.1,t1.1}.xml").SetName("p0)-[{t0.1,t1.1}.xml");
-                yield return Good(@"C:\dev\PetriNets\PNML\standard test nets\p0).xml").SetName("p0).xml");
                 yield return Good(@"C:\dev\PetriNets\PNML\standard test nets\t0]-({p0,p1})-[t2.xml").SetName("t0]-({p0,p1})-[t2.xml");
-                yield return Good(@"C:\dev\PetriNets\PNML\standard test nets\t0].xml").SetName("t0].xml");
                 yield return Good(@"C:\dev\PetriNets\PNML\standard test nets\t3]-(p0)-[{t0.1,t1.2,t2.3}.xml").SetName("t3]-(p0)-[{t0.1,t1.2,t2.3}.xml");
                 yield return Good(@"C:\dev\PetriNets\PNML\standard test nets\two-step-cycle.xml").SetName("two-step-cycle.xml");
                 yield return Good(@"C:\dev\PetriNets\PNML\standard test nets\{P0,P1})-[T0]-({P2,P3}.xml").SetName("{P0,P1})-[T0]-({P2,P3}.xml");
                 yield return Good(@"C:\dev\PetriNets\PNML\standard test nets\{p0, p1})-[t0.xml").SetName("{p0, p1})-[t0.xml");
                 yield return Good(@"C:\dev\PetriNets\PNML\standard test nets\{p0,p1,p2})-[t0]-(p3.xml").SetName("{p0,p1,p2})-[t0]-(p3.xml");
                 yield return Good(@"C:\dev\PetriNets\PNML\standard test nets\{p0,p1})-[t0]-(p2.xml").SetName("{p0,p1})-[t0]-(p2.xml");
+                yield return Good(@"C:\dev\PetriNets\PNML\standard test nets\p0).xml").SetName("p0).xml");
+                yield return Good(@"C:\dev\PetriNets\PNML\standard test nets\t0].xml").SetName("t0].xml");
                 yield return Good(@"C:\dev\PetriNets\PNML\standard test nets\{t0,t1.2}]-(p0.xml").SetName("{t0,t1.2}]-(p0.xml");
             }
         }
-
-        private static TestCaseData Good(params object[] args)
+/*
+        public static IEnumerable FailingSpecs
         {
-            return new TestCaseData(args);
+            get
+            {
+            }
+        }
+*/
+
+        private static TestCaseData Good(params string[] args)
+        {
+            return new TestCaseData(args[0], args.Skip(1));
         }
 
         private static TestCaseData Bad(params object[] args)

@@ -89,17 +89,18 @@ namespace PetriNetCore
 
         public string Name { get; set; }
         public Dictionary<int, string> Places { get; set; }
+        public Dictionary<string, int> PlaceMarkings { get; set; }
+        public Dictionary<string, int> PlaceCapacities { get; set; }
         public Dictionary<int, string> Transitions { get; set; }
         public Dictionary<int, List<InArc>> InArcs { get; set; }
         public Dictionary<int, List<OutArc>> OutArcs { get; set; }
         public Dictionary<int, List<Action<GraphPetriNet>>> TransitionFunctions { get; set; }
         public CreatePetriNet(string name)
         {
-            if (string.IsNullOrWhiteSpace(name))
-            {
-                throw new ArgumentException("name");
-            }
+            Contract.Requires(!string.IsNullOrWhiteSpace(name));
             Name = name;
+            PlaceMarkings = new Dictionary<string, int>();
+            PlaceCapacities = new Dictionary<string, int>();
         }
 
         public static CreatePetriNet Called(string name)
@@ -173,30 +174,48 @@ namespace PetriNetCore
 
         public T CreateNet<T>() where T : class
         {
+            T result = null;
             if (typeof(T).Equals( typeof(GraphPetriNet)))
             {
-                return new GraphPetriNet(
+                var tmp = new GraphPetriNet(
                     Name,
                     Places,
                     Transitions,
                     InArcs,
-                    OutArcs) as T;
+                    OutArcs);
+                foreach (var capacity in PlaceCapacities)
+                {
+                    tmp.PlaceCapacities[PlaceIndex(capacity.Key)] = capacity.Value;
+                }
+                result = tmp as T;
             }
             if (typeof(T).Equals(typeof(MatrixPetriNet)))
             {
-                return new MatrixPetriNet(
+                result = new MatrixPetriNet(
                     Name,
                     Places,
                     Transitions,
                     InArcs,
                     OutArcs) as T;
             }
-            throw new ApplicationException("Unrecognised petri net type requested");
+            if (result == null)
+            {
+                throw new ApplicationException("Unrecognised petri net type requested");
+            }
+            return result;
         }
 
         public Marking CreateMarking()
         {
-            return new Marking(Places.Count);
+            var result = new Marking(Places.Count);
+            foreach (var marking in PlaceMarkings)
+            {
+                if (Places.ContainsValue(marking.Key))
+                {
+                    result[PlaceIndex(marking.Key)] = marking.Value;
+                }
+            }
+            return result;
         }
 
         public PetriNetEventBuilder WhenFiring(string transitionName)
@@ -261,6 +280,11 @@ namespace PetriNetCore
                 TransitionFunctions[transition] = new List<Action<GraphPetriNet>>();
             }
             TransitionFunctions[transition].Add(task);
+        }
+        public PlaceSpecifier WithPlace(string placeName)
+        {
+            Contract.Requires(!string.IsNullOrWhiteSpace(placeName));
+            return new PlaceSpecifier(this, placeName);
         }
     }
 }

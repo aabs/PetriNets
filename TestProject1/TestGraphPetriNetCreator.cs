@@ -203,25 +203,25 @@ namespace TestProject1
         [Test]
         public void TestFullMontySetup()
         {
-var pnb = CreatePetriNet
-    .Called("net")
-    .WithPlaces("p1", "p2", "p3")
-    .AndTransitions("t1", "t2", "t3")
-    .With("t1").FedBy("p1", "p2")
-    .And().With("t2").FedBy("p3").AsInhibitor()
-    .And().With("t1").Feeding("p2")
-    .And().With("t2").Feeding("p1")
-    .And().WhenFiring("t1")
-        .Run(x => Console.WriteLine("Fired"))
-        .Run(x => Console.WriteLine("Fired"))
-        .Run(x => Console.WriteLine("Fired"))
-    .And().WhenFiring("t2")
-        .Run(x => Console.WriteLine("Fired"))
-        .Run(x => Console.WriteLine("Fired"))
-        .Run(x => Console.WriteLine("Fired"))
-    .Complete()
-    ;
-var pn = pnb.CreateNet<GraphPetriNet>();
+            var pnb = CreatePetriNet
+                .Called("net")
+                .WithPlaces("p1", "p2", "p3")
+                .AndTransitions("t1", "t2", "t3")
+                .With("t1").FedBy("p1", "p2")
+                .And().With("t2").FedBy("p3").AsInhibitor()
+                .And().With("t1").Feeding("p2")
+                .And().With("t2").Feeding("p1")
+                .And().WhenFiring("t1")
+                    .Run(x => Console.WriteLine("Fired"))
+                    .Run(x => Console.WriteLine("Fired"))
+                    .Run(x => Console.WriteLine("Fired"))
+                .And().WhenFiring("t2")
+                    .Run(x => Console.WriteLine("Fired"))
+                    .Run(x => Console.WriteLine("Fired"))
+                    .Run(x => Console.WriteLine("Fired"))
+                .Complete()
+                ;
+            var pn = pnb.CreateNet<GraphPetriNet>();
             Assert.IsNotNull(pn);
             var m = pnb.CreateMarking();
         }
@@ -314,6 +314,78 @@ var pn = pnb.CreateNet<GraphPetriNet>();
 
         }
 
+        [Test, Category("Regression")]
+        public void TestCreateMarking()
+        {
+            var pnb = CreatePetriNet.Called("blah")
+                .WithPlaces("p1", "p2")
+                .AndTransitions("t1")
+                .With("t1").FedBy("p1")
+                .And().With("t1").Feeding("p1")
+                .And().WithPlace("p1").HavingMarking(1)
+                .And().WithPlace("p2").HavingMarking(2)
+                .Done();
+            var m = pnb.CreateMarking();
+            Assert.AreEqual(2, m.Count);
+            Assert.AreEqual(1, m[pnb.PlaceIndex("p1")]);
+            Assert.AreEqual(2, m[pnb.PlaceIndex("p2")]);
+        }
+        [Test, Category("Regression")]
+        public void TestCreateGraphWithNonDefaultCapacities()
+        {
+            var pnb = CreatePetriNet.Called("blah")
+                .WithPlaces("p1", "p2")
+                .AndTransitions("t1")
+                .With("t1").FedBy("p1")
+                .And().With("t1").Feeding("p1")
+                .And().WithPlace("p1").HavingCapacity(2)
+                .And().WithPlace("p2").HavingCapacity(3)
+                .Done();
+            var pn = pnb.CreateNet<GraphPetriNet>();
+            Assert.AreEqual(2, pn.PlaceCapacities.Count); 
+            Assert.AreEqual(2, pn.PlaceCapacities[pnb.PlaceIndex("p1")]);
+            Assert.AreEqual(3, pn.PlaceCapacities[pnb.PlaceIndex("p2")]);
+        }
+
+        [Test, Category("Regression"), ExpectedException("System.Diagnostics.Contracts.__ContractsRuntime+ContractException")]
+        public void TestCreateGraphWithIllegalMarking1()
+        {
+            var pnb = CreatePetriNet.Called("blah")
+                .WithPlaces("p1", "p2")
+                .AndTransitions("t1")
+                .With("t1").FedBy("p1")
+                .And().With("t1").Feeding("p1")
+                .And().WithPlace("p1").HavingMarking(-1)
+                .And().WithPlace("p2").HavingMarking(2)
+                .Done();
+        }
+
+        [Test, Category("Regression"), ExpectedException("System.Diagnostics.Contracts.__ContractsRuntime+ContractException")]
+        public void TestCreateGraphWithIllegalMarking2()
+        {
+            var pnb = CreatePetriNet.Called("blah")
+                .WithPlaces("p1", "p2")
+                .AndTransitions("t1")
+                .With("t1").FedBy("p1")
+                .And().With("t1").Feeding("p1")
+                .And().WithPlace("").HavingMarking(1)
+                .And().WithPlace("p2").HavingMarking(2)
+                .Done();
+        }
+        [Test, Category("Regression"), ExpectedException("System.Diagnostics.Contracts.__ContractsRuntime+ContractException")]
+        public void TestCreateGraphWithIllegalMarking3()
+        {
+            var pnb = CreatePetriNet.Called("blah")
+                .WithPlaces("p1", "p2")
+                .AndTransitions("t1")
+                .With("t1").FedBy("p1")
+                .And().With("t1").Feeding("p1")
+                .And().WithPlace(null).HavingMarking(1)
+                .And().WithPlace("p2").HavingMarking(2)
+                .Done();
+        }
+  
+  
         #endregion
     }
 }

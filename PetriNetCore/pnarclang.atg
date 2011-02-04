@@ -16,7 +16,6 @@ TOKENS
 	number = digit {digit} .
 	ident = letter {(letter | digit)} .
 	pnStart = "PetriNet" .
-	specStart = ":" .
 	end = "End" . 
 	placeFromEnd = ')' .
 	placeToEnd = '(' .
@@ -39,8 +38,12 @@ PetriNetSpec						(.
 		ident						(.	
 									Builder = CreatePetriNet.Called(t.val);
 									.)
-	specStart
+	"<"
 	ArcSetSpec {ArcSetSpec}
+    ">"
+    {
+        MarkingSpec
+    }
 	.
 
 
@@ -52,15 +55,47 @@ ArcSetSpec							(.
 									int weight = 1;
 									bool isInhibitor = false;
 									.)
-	 = SrcName<ref src> 
-		ArcDetail<ref isInArc, ref weight, ref isInhibitor> 
-		DstName<ref dst>			(.
-									List<string> t = isInArc ? dst : src;
-									List<string> p = isInArc ? src : dst;
-                                    Builder.GenerateArc(p,t,weight,isInhibitor, isInArc);
-									.)
-		sep
+	 = (
+            SrcName<ref src> 
+		    {
+                ArcDetail<ref isInArc, ref weight, ref isInhibitor> 
+		        DstName<ref dst>			(.
+									        List<string> t = isInArc ? dst : src;
+									        List<string> p = isInArc ? src : dst;
+                                            Builder.GenerateArc(p,t,weight,isInhibitor, isInArc);
+									        .)
+            }
+    		sep
+        )|(
+            {
+                SrcName<ref src> 
+		        ArcDetail<ref isInArc, ref weight, ref isInhibitor> 
+		    }
+            DstName<ref dst>			(.
+									    List<string> t = isInArc ? dst : src;
+									    List<string> p = isInArc ? src : dst;
+                                        Builder.GenerateArc(p,t,weight,isInhibitor, isInArc);
+									    .)
+	    	sep
+        )
 	 .
+    MarkingSpec
+    =
+        MarkingEntry
+        {
+            MarkingEntry
+        }
+    .
+
+    MarkingEntry                    (.string id = "", tokens = "";.)
+    =
+        ident                       (.id = t.val;.)
+        '=' 
+        number                      (.tokens = t.val;
+                                      Builder.WithPlace(id).HavingMarking(int.Parse(tokens)).Done();
+                                    .)
+        ";"
+    .
 
 	SrcName<.ref List<string> src.>
 	=	StringList<ref src>.

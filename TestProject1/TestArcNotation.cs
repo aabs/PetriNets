@@ -51,6 +51,17 @@ namespace TestProject1
                             outArcs,
                             numInhibitors);
         }
+
+
+        [Test]
+        [TestCaseSource(typeof(TestDataGenerator), "MarkingCases")]
+        public void TestMarkingNotation(string spec, string serialisedMarking)
+        {
+            CreatePetriNet pnb = CreatePetriNet.Parse(spec);
+            var m = pnb.CreateMarking();  
+            Assert.AreEqual(serialisedMarking, m.ToString()); 
+        }
+  
     }
 
     public static class TestDataGenerator
@@ -121,122 +132,137 @@ namespace TestProject1
             {
                 #region duplicate names
 
-                yield return Bad("PetriNet mynet: p1)[p1; ",1,1,1).SetName("B.1");
-                yield return Bad("PetriNet mynet: p1)-[p1; ",1,1,1).SetName("B.2");
-                yield return Bad("PetriNet mynet: p1)--[p1; ",1,1,1).SetName("B.3");
-                yield return Bad("PetriNet mynet: p1)-2-[p1; ",1,1,1).SetName("B.4");
-                yield return Bad("PetriNet mynet: p1)-2-o-[p1; ",1,1,1).SetName("B.5");
-                yield return Bad("PetriNet mynet: t1]-(t1; ",1,1,1).SetName("B.6");
+                yield return Bad("PetriNet mynet: p1)[p1; ", 1, 1, 1).SetName("B.1");
+                yield return Bad("PetriNet mynet: p1)-[p1; ", 1, 1, 1).SetName("B.2");
+                yield return Bad("PetriNet mynet: p1)--[p1; ", 1, 1, 1).SetName("B.3");
+                yield return Bad("PetriNet mynet: p1)-2-[p1; ", 1, 1, 1).SetName("B.4");
+                yield return Bad("PetriNet mynet: p1)-2-o-[p1; ", 1, 1, 1).SetName("B.5");
+                yield return Bad("PetriNet mynet: t1]-(t1; ", 1, 1, 1).SetName("B.6");
 
                 #endregion
 
                 #region duplicate types
 
-                yield return Bad("PetriNet mynet: t1)(p1; ",1,1,1).SetName("B.7");
-                yield return Bad("PetriNet mynet: t1)-(p1; ",1,1,1).SetName("B.8");
-                yield return Bad("PetriNet mynet: t1)--(p1; ",1,1,1).SetName("B.9");
-                yield return Bad("PetriNet mynet: t1)-2-(p1; ",1,1,1).SetName("B.10");
-                yield return Bad("PetriNet mynet: t1)-2-o-(p1; ",1,1,1).SetName("B.11");
+                yield return Bad("PetriNet mynet: t1)(p1; ", 1, 1, 1).SetName("B.7");
+                yield return Bad("PetriNet mynet: t1)-(p1; ", 1, 1, 1).SetName("B.8");
+                yield return Bad("PetriNet mynet: t1)--(p1; ", 1, 1, 1).SetName("B.9");
+                yield return Bad("PetriNet mynet: t1)-2-(p1; ", 1, 1, 1).SetName("B.10");
+                yield return Bad("PetriNet mynet: t1)-2-o-(p1; ", 1, 1, 1).SetName("B.11");
 
-                yield return Bad("PetriNet mynet: t1][p1; ",1,1,1).SetName("B.12");
-                yield return Bad("PetriNet mynet: t1]-[p1; ",1,1,1).SetName("B.13");
-                yield return Bad("PetriNet mynet: t1]--[p1; ",1,1,1).SetName("B.14");
-                yield return Bad("PetriNet mynet: t1]-2-[p1; ",1,1,1).SetName("B.15");
-                yield return Bad("PetriNet mynet: t1]-2-o-[p1; ",1,1,1).SetName("B.16");
+                yield return Bad("PetriNet mynet: t1][p1; ", 1, 1, 1).SetName("B.12");
+                yield return Bad("PetriNet mynet: t1]-[p1; ", 1, 1, 1).SetName("B.13");
+                yield return Bad("PetriNet mynet: t1]--[p1; ", 1, 1, 1).SetName("B.14");
+                yield return Bad("PetriNet mynet: t1]-2-[p1; ", 1, 1, 1).SetName("B.15");
+                yield return Bad("PetriNet mynet: t1]-2-o-[p1; ", 1, 1, 1).SetName("B.16");
 
                 #endregion
 
                 #region missing origin
 
-                yield return Bad("PetriNet mynet: )[t1; ",1,1,1).SetName("B.17");
-                yield return Bad("PetriNet mynet: )-[t1; ",1,1,1).SetName("B.18");
-                yield return Bad("PetriNet mynet: )--[t1; ",1,1,1).SetName("B.19");
-                yield return Bad("PetriNet mynet: )---------------------[t1; ",1,1,1).SetName("B.20");
-                yield return Bad("PetriNet mynet: )o[t1; ",1,1,1).SetName("B.21");
-                yield return Bad("PetriNet mynet: )-o[t1; ",1,1,1).SetName("B.22");
-                yield return Bad("PetriNet mynet: )-o-[t1; ",1,1,1).SetName("B.23");
-                yield return Bad("PetriNet mynet: )----o----[t1; ",1,1,1).SetName("B.24");
-                yield return Bad("PetriNet mynet: )2[t1; ",1,1,1).SetName("B.25");
-                yield return Bad("PetriNet mynet: )2-[t1; ",1,1,1).SetName("B.26");
-                yield return Bad("PetriNet mynet: )-2[t1; ",1,1,1).SetName("B.27");
-                yield return Bad("PetriNet mynet: )--2--[t1; ",1,1,1).SetName("B.28");
-                yield return Bad("PetriNet mynet: )------------------2--[t1; ",1,1,1).SetName("B.29");
-                yield return Bad("PetriNet mynet: )2------------------[t1; ",1,1,1).SetName("B.30");
-                yield return Bad("PetriNet mynet: )2o[t1; ",1,1,1).SetName("B.31");
-                yield return Bad("PetriNet mynet: )-2o[t1; ",1,1,1).SetName("B.32");
-                yield return Bad("PetriNet mynet: )2-o[t1; ",1,1,1).SetName("B.33");
-                yield return Bad("PetriNet mynet: )2o-[t1; ",1,1,1).SetName("B.34");
-                yield return Bad("PetriNet mynet: )-2-o[t1; ",1,1,1).SetName("B.35");
-                yield return Bad("PetriNet mynet: )-2o-[t1; ",1,1,1).SetName("B.36");
-                yield return Bad("PetriNet mynet: )-2-o-[t1; ",1,1,1).SetName("B.37");
+                yield return Bad("PetriNet mynet: )[t1; ", 1, 1, 1).SetName("B.17");
+                yield return Bad("PetriNet mynet: )-[t1; ", 1, 1, 1).SetName("B.18");
+                yield return Bad("PetriNet mynet: )--[t1; ", 1, 1, 1).SetName("B.19");
+                yield return Bad("PetriNet mynet: )---------------------[t1; ", 1, 1, 1).SetName("B.20");
+                yield return Bad("PetriNet mynet: )o[t1; ", 1, 1, 1).SetName("B.21");
+                yield return Bad("PetriNet mynet: )-o[t1; ", 1, 1, 1).SetName("B.22");
+                yield return Bad("PetriNet mynet: )-o-[t1; ", 1, 1, 1).SetName("B.23");
+                yield return Bad("PetriNet mynet: )----o----[t1; ", 1, 1, 1).SetName("B.24");
+                yield return Bad("PetriNet mynet: )2[t1; ", 1, 1, 1).SetName("B.25");
+                yield return Bad("PetriNet mynet: )2-[t1; ", 1, 1, 1).SetName("B.26");
+                yield return Bad("PetriNet mynet: )-2[t1; ", 1, 1, 1).SetName("B.27");
+                yield return Bad("PetriNet mynet: )--2--[t1; ", 1, 1, 1).SetName("B.28");
+                yield return Bad("PetriNet mynet: )------------------2--[t1; ", 1, 1, 1).SetName("B.29");
+                yield return Bad("PetriNet mynet: )2------------------[t1; ", 1, 1, 1).SetName("B.30");
+                yield return Bad("PetriNet mynet: )2o[t1; ", 1, 1, 1).SetName("B.31");
+                yield return Bad("PetriNet mynet: )-2o[t1; ", 1, 1, 1).SetName("B.32");
+                yield return Bad("PetriNet mynet: )2-o[t1; ", 1, 1, 1).SetName("B.33");
+                yield return Bad("PetriNet mynet: )2o-[t1; ", 1, 1, 1).SetName("B.34");
+                yield return Bad("PetriNet mynet: )-2-o[t1; ", 1, 1, 1).SetName("B.35");
+                yield return Bad("PetriNet mynet: )-2o-[t1; ", 1, 1, 1).SetName("B.36");
+                yield return Bad("PetriNet mynet: )-2-o-[t1; ", 1, 1, 1).SetName("B.37");
 
-                yield return Bad("PetriNet mynet: )-2o[t1; ",1,1,1).SetName("B.38");
-                yield return Bad("PetriNet mynet: )2--o[t1; ",1,1,1).SetName("B.39");
-                yield return Bad("PetriNet mynet: )2o--[t1; ",1,1,1).SetName("B.40");
-                yield return Bad("PetriNet mynet: )--2--o[t1; ",1,1,1).SetName("B.41");
-                yield return Bad("PetriNet mynet: )--2o--[t1; ",1,1,1).SetName("B.42");
-                yield return Bad("PetriNet mynet: )--2--o--[t1; ",1,1,1).SetName("B.43");
+                yield return Bad("PetriNet mynet: )-2o[t1; ", 1, 1, 1).SetName("B.38");
+                yield return Bad("PetriNet mynet: )2--o[t1; ", 1, 1, 1).SetName("B.39");
+                yield return Bad("PetriNet mynet: )2o--[t1; ", 1, 1, 1).SetName("B.40");
+                yield return Bad("PetriNet mynet: )--2--o[t1; ", 1, 1, 1).SetName("B.41");
+                yield return Bad("PetriNet mynet: )--2o--[t1; ", 1, 1, 1).SetName("B.42");
+                yield return Bad("PetriNet mynet: )--2--o--[t1; ", 1, 1, 1).SetName("B.43");
 
-                yield return Bad("PetriNet mynet: ](p1; ",1,1,1).SetName("B.44");
-                yield return Bad("PetriNet mynet: ]-(p1; ",1,1,1).SetName("B.45");
-                yield return Bad("PetriNet mynet: ]------(p1; ",1,1,1).SetName("B.46");
+                yield return Bad("PetriNet mynet: ](p1; ", 1, 1, 1).SetName("B.44");
+                yield return Bad("PetriNet mynet: ]-(p1; ", 1, 1, 1).SetName("B.45");
+                yield return Bad("PetriNet mynet: ]------(p1; ", 1, 1, 1).SetName("B.46");
 
-                yield return Bad("PetriNet mynet: ]2(p1; ",1,1,1).SetName("B.47");
-                yield return Bad("PetriNet mynet: ]-2(p1; ",1,1,1).SetName("B.48");
-                yield return Bad("PetriNet mynet: ]2-(p1; ",1,1,1).SetName("B.49");
-                yield return Bad("PetriNet mynet: ]-2-(p1; ",1,1,1).SetName("B.50");
-                yield return Bad("PetriNet mynet: ]--2(p1; ",1,1,1).SetName("B.51");
-                yield return Bad("PetriNet mynet: ]2--(p1; ",1,1,1).SetName("B.52");
-                yield return Bad("PetriNet mynet: ]--2--(p1; ",1,1,1).SetName("B.53");
+                yield return Bad("PetriNet mynet: ]2(p1; ", 1, 1, 1).SetName("B.47");
+                yield return Bad("PetriNet mynet: ]-2(p1; ", 1, 1, 1).SetName("B.48");
+                yield return Bad("PetriNet mynet: ]2-(p1; ", 1, 1, 1).SetName("B.49");
+                yield return Bad("PetriNet mynet: ]-2-(p1; ", 1, 1, 1).SetName("B.50");
+                yield return Bad("PetriNet mynet: ]--2(p1; ", 1, 1, 1).SetName("B.51");
+                yield return Bad("PetriNet mynet: ]2--(p1; ", 1, 1, 1).SetName("B.52");
+                yield return Bad("PetriNet mynet: ]--2--(p1; ", 1, 1, 1).SetName("B.53");
 
                 #endregion
 
                 #region missing destination
 
-                yield return Bad("PetriNet mynet: p1)[; ",1,1,1).SetName("B.54");
-                yield return Bad("PetriNet mynet: p1)-[; ",1,1,1).SetName("B.55");
-                yield return Bad("PetriNet mynet: p1)--[; ",1,1,1).SetName("B.56");
-                yield return Bad("PetriNet mynet: p1)---------------------[; ",1,1,1).SetName("B.57");
-                yield return Bad("PetriNet mynet: p1)o[; ",1,1,1).SetName("B.58");
-                yield return Bad("PetriNet mynet: p1)-o[; ",1,1,1).SetName("B.59");
-                yield return Bad("PetriNet mynet: p1)-o-[; ",1,1,1).SetName("B.60");
-                yield return Bad("PetriNet mynet: p1)----o----[; ",1,1,1).SetName("B.61");
+                yield return Bad("PetriNet mynet: p1)[; ", 1, 1, 1).SetName("B.54");
+                yield return Bad("PetriNet mynet: p1)-[; ", 1, 1, 1).SetName("B.55");
+                yield return Bad("PetriNet mynet: p1)--[; ", 1, 1, 1).SetName("B.56");
+                yield return Bad("PetriNet mynet: p1)---------------------[; ", 1, 1, 1).SetName("B.57");
+                yield return Bad("PetriNet mynet: p1)o[; ", 1, 1, 1).SetName("B.58");
+                yield return Bad("PetriNet mynet: p1)-o[; ", 1, 1, 1).SetName("B.59");
+                yield return Bad("PetriNet mynet: p1)-o-[; ", 1, 1, 1).SetName("B.60");
+                yield return Bad("PetriNet mynet: p1)----o----[; ", 1, 1, 1).SetName("B.61");
 
-                yield return Bad("PetriNet mynet: p1)2[; ",1,1,1).SetName("B.62");
-                yield return Bad("PetriNet mynet: p1)2-[; ",1,1,1).SetName("B.63");
-                yield return Bad("PetriNet mynet: p1)-2[; ",1,1,1).SetName("B.64");
-                yield return Bad("PetriNet mynet: p1)--2--[; ",1,1,1).SetName("B.65");
-                yield return Bad("PetriNet mynet: p1)------------------2--[; ",1,1,1).SetName("B.66");
-                yield return Bad("PetriNet mynet: p1)2------------------[; ",1,1,1).SetName("B.67");
+                yield return Bad("PetriNet mynet: p1)2[; ", 1, 1, 1).SetName("B.62");
+                yield return Bad("PetriNet mynet: p1)2-[; ", 1, 1, 1).SetName("B.63");
+                yield return Bad("PetriNet mynet: p1)-2[; ", 1, 1, 1).SetName("B.64");
+                yield return Bad("PetriNet mynet: p1)--2--[; ", 1, 1, 1).SetName("B.65");
+                yield return Bad("PetriNet mynet: p1)------------------2--[; ", 1, 1, 1).SetName("B.66");
+                yield return Bad("PetriNet mynet: p1)2------------------[; ", 1, 1, 1).SetName("B.67");
 
-                yield return Bad("PetriNet mynet: p1)2o[; ",1,1,1).SetName("B.68");
-                yield return Bad("PetriNet mynet: p1)-2o[; ",1,1,1).SetName("B.69");
-                yield return Bad("PetriNet mynet: p1)2-o[; ",1,1,1).SetName("B.70");
-                yield return Bad("PetriNet mynet: p1)2o-[; ",1,1,1).SetName("B.71");
-                yield return Bad("PetriNet mynet: p1)-2-o[; ",1,1,1).SetName("B.72");
-                yield return Bad("PetriNet mynet: p1)-2o-[; ",1,1,1).SetName("B.73");
-                yield return Bad("PetriNet mynet: p1)-2-o-[; ",1,1,1).SetName("B.74");
+                yield return Bad("PetriNet mynet: p1)2o[; ", 1, 1, 1).SetName("B.68");
+                yield return Bad("PetriNet mynet: p1)-2o[; ", 1, 1, 1).SetName("B.69");
+                yield return Bad("PetriNet mynet: p1)2-o[; ", 1, 1, 1).SetName("B.70");
+                yield return Bad("PetriNet mynet: p1)2o-[; ", 1, 1, 1).SetName("B.71");
+                yield return Bad("PetriNet mynet: p1)-2-o[; ", 1, 1, 1).SetName("B.72");
+                yield return Bad("PetriNet mynet: p1)-2o-[; ", 1, 1, 1).SetName("B.73");
+                yield return Bad("PetriNet mynet: p1)-2-o-[; ", 1, 1, 1).SetName("B.74");
 
-                yield return Bad("PetriNet mynet: p1)-2o[; ",1,1,1).SetName("B.75");
-                yield return Bad("PetriNet mynet: p1)2--o[; ",1,1,1).SetName("B.76");
-                yield return Bad("PetriNet mynet: p1)2o--[; ",1,1,1).SetName("B.77");
-                yield return Bad("PetriNet mynet: p1)--2--o[; ",1,1,1).SetName("B.78");
-                yield return Bad("PetriNet mynet: p1)--2o--[; ",1,1,1).SetName("B.79");
-                yield return Bad("PetriNet mynet: p1)--2--o--[; ",1,1,1).SetName("B.80");
+                yield return Bad("PetriNet mynet: p1)-2o[; ", 1, 1, 1).SetName("B.75");
+                yield return Bad("PetriNet mynet: p1)2--o[; ", 1, 1, 1).SetName("B.76");
+                yield return Bad("PetriNet mynet: p1)2o--[; ", 1, 1, 1).SetName("B.77");
+                yield return Bad("PetriNet mynet: p1)--2--o[; ", 1, 1, 1).SetName("B.78");
+                yield return Bad("PetriNet mynet: p1)--2o--[; ", 1, 1, 1).SetName("B.79");
+                yield return Bad("PetriNet mynet: p1)--2--o--[; ", 1, 1, 1).SetName("B.80");
 
-                yield return Bad("PetriNet mynet: t1](; ",1,1,1).SetName("B.81");
-                yield return Bad("PetriNet mynet: t1]-(; ",1,1,1).SetName("B.82");
-                yield return Bad("PetriNet mynet: t1]------(; ",1,1,1).SetName("B.83");
+                yield return Bad("PetriNet mynet: t1](; ", 1, 1, 1).SetName("B.81");
+                yield return Bad("PetriNet mynet: t1]-(; ", 1, 1, 1).SetName("B.82");
+                yield return Bad("PetriNet mynet: t1]------(; ", 1, 1, 1).SetName("B.83");
 
-                yield return Bad("PetriNet mynet: t1]2(; ",1,1,1).SetName("B.84");
-                yield return Bad("PetriNet mynet: t1]-2(; ",1,1,1).SetName("B.85");
-                yield return Bad("PetriNet mynet: t1]2-(; ",1,1,1).SetName("B.86");
-                yield return Bad("PetriNet mynet: t1]-2-(; ",1,1,1).SetName("B.87");
-                yield return Bad("PetriNet mynet: t1]--2(; ",1,1,1).SetName("B.88");
-                yield return Bad("PetriNet mynet: t1]2--(; ",1,1,1).SetName("B.89");
-                yield return Bad("PetriNet mynet: t1]--2--(; ",1,1,1).SetName("B.90");
+                yield return Bad("PetriNet mynet: t1]2(; ", 1, 1, 1).SetName("B.84");
+                yield return Bad("PetriNet mynet: t1]-2(; ", 1, 1, 1).SetName("B.85");
+                yield return Bad("PetriNet mynet: t1]2-(; ", 1, 1, 1).SetName("B.86");
+                yield return Bad("PetriNet mynet: t1]-2-(; ", 1, 1, 1).SetName("B.87");
+                yield return Bad("PetriNet mynet: t1]--2(; ", 1, 1, 1).SetName("B.88");
+                yield return Bad("PetriNet mynet: t1]2--(; ", 1, 1, 1).SetName("B.89");
+                yield return Bad("PetriNet mynet: t1]--2--(; ", 1, 1, 1).SetName("B.90");
 
                 #endregion
+            }
+        }
+        public static IEnumerable MarkingCases
+        {
+            get
+            {
+                yield return Good(@"
+PetriNet mynet
+<
+    {p1,p2})-[t1; 
+    t1]-(p3; 
+    p3)-[t2; 
+    t2]-({p1,p2}; 
+>
+M p1=2;p2=3; ", "");
             }
         }
 
